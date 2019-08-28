@@ -1,0 +1,144 @@
+#  DEC/CMS REPLACEMENT HISTORY, Element SCTKREAD.ME 
+#  *4    22-MAY-1991 15:16:31 BROGNA "Toolkit Version 3.0" 
+#  *3     3-MAY-1991 12:14:08 BROGNA "" 
+#  *2    25-MAR-1991 16:10:55 BROGNA "PS2 support" 
+#  *1     5-NOV-1990 18:15:21 GRABEL "initial..." 
+#  DEC/CMS REPLACEMENT HISTORY, Element SCTKREAD.ME 
+            Digital Palette SCSI Toolkit Readme
+
+This read me file contains information for Version 2.2 of the Digital Palette
+Toolkit for SCSI.
+
+
+Table of Contents:
+    Porting the toolkit to a new host system
+    Version 170 Firmware Bugs
+    Additional notes on the use of the Servo Mode
+    How the Toolkit code finds the Palette on SCSI
+    Compiler and System Notes
+        Microsoft C on DOS
+        LightSpeed C on the Macintosh
+
+---- Porting the toolkit to a new host system
+
+The Digital Palette Toolkit is provided in two major flavors to drive the
+Palette over the Centronics parallel port or over the SCSI interface.
+The application interface to the Toolkit remains the same regardless of the
+physical interface.  Performance with the SCSI interface will generally
+be much better than with the Centronics because of the greater transmission
+data rate available with SCSI.
+
+The SCSI Toolkit also contains a low level SCSI driver interface which
+allows the Toolkit to be ported to a number of host environments.  The
+Toolkit itself has been written to a subset of the ANSI C specification
+and contains no assembly language to minimize the pain of porting to
+a new host system.  A make file has been supplied which is compatible
+with the Microsoft C MAKE.  Use this as a starting point for building a
+make for your system.
+
+Currently, the SCSI toolkit has been ported to the Macintosh OS, PS/2
+and PC-DOS.
+
+Under PC-DOS, the NCR ADP 31-S SCSI adaptor board is being used. This
+adaptor is NOT recommended for new designs but is made available if
+you happen to have one of these adapters.  We have SCSI
+Toolkits drivers available for some of the more popular SCSI adaptors
+for the PC as well as the IBM SCSI MicroChannel Adapter for the PS-2.
+Contact Polaroid for drivers which are currently available.
+
+On the Macintosh, the LightSpeed C Version 3.01 compiler is currently
+supported. Refer to the Compiler notes for more info on building the
+toolkit using LSC.
+
+MPW C support for the Macintosh is in the works.
+
+To port to a new system, the low level SCSI driver interface must be
+written for the new host.  Refer to scdpmac.c (Macintosh driver),
+scdpncr.c (DOS NCR driver), scdpfdom.c (DOS Future Domain driver) and 
+scdpps2.c (DOS PS/2 driver) for examples on functions which are 
+required for porting to a new host.
+
+
+---- How the Toolkit code finds the Palette on SCSI
+
+The DP_InitPrinter function in the toolkit will automatically scan
+all of the SCSI devices to determine the SCSI ID which the Palette is
+set to.  To provide full compatibility with the Centronics version of
+the toolkit, the DP_PORT entry of the DP_DATA structure has taken on
+a double function.  DPALETTE.H contains a definition for DP_SCSIID_OFFSET.
+
+DP_InitPrinter():
+	input parameter port:  This parameter specifies which SCSI ID to 
+                          use in order to locate a Digital Palette.
+                          Typically the first time this function is called
+                          this parameter should be zero in order to locate
+                          the first Digital Palette on the bus.  To find
+                          additional palettes on the SCSI bus, add 1 to
+                          the last SCSI ID found and specify this new ID
+                          as this parameter.  (Note:  Each Digital Palette
+                          on the bus requires its own DP_DATA structure.)
+
+  A convention has been adopted where, if the
+DP_PORT value is between 0 and (DP_SCSIID_OFFSET - 1), it refers to a
+Centronics Port number.  If the DP_PORT value is set to a value from
+DP_SCSIID_OFFSET or above, it refers to a SCSI ID.  If the
+DP_InitPrinter function is called with a DP_PORT number less than
+DP_SCSIID_OFFSET, then all SCSI devices will be interogated with an
+Inquiry command until the Palette is found.  The value returned by
+the DP_InitFunction will be the Palette's SCSI ID plus
+DP_SCSIID_OFFSET.  Refer to the comments about DP_SCSIID_OFFSET in
+dpalette.h.
+
+
+---- Compiler and System Notes
+
+-------- Microsoft C on DOS
+
+    The toolkit has been tested on DOS using Microsoft C, Versions 5.1 
+    and 6.0. Building the Toolkit and demo with the Microsoft compiler 
+    is straight forward.  The toolkit directory contains a Microsoft 
+    make compatible make file, sctlkit.ms.  Use this to build the library, 
+    tkscsi.lib.  All of the demos can be built with the scsample.ms make 
+    file in demo directory.
+
+-------- LightSpeed C on the Macintosh
+    The toolkit has been tested on the Macintosh using LSC Version 3.01.
+    All of the demo's perform their terminal io using stdin and stdout.
+    These programs assume that they're talking to an 80 character 
+    x 24 line terminal.  Many of them will fill the screen with information
+    and exit.
+
+    LSC provides a nice facility of opening a 'console' window on the
+    Mac if a program begins making stdout calls.  One feature on LSC V3.01
+    which is rather annoying is if you're using the source level debugger,
+    the 'console' window will be half height.  This lets the debugger run 
+    in the lower half of the screen and the display doesn't need to be
+    updated.  To disable this feature, the stdio library must be rebuilt.
+    Edit the config.h file in the LSC library folder to turn _HALF_WINDOW_
+    off and rebuild the stdio library.
+
+    A 'main' front end for LSC, lscmain.c, is provided which provides a
+    mechanisms to get command line arguments to the demo programs and keep
+    the 'console' window from disappearing too soon on exit.
+
+    A compiler switch in tkhost.h must be changed to enable compilations
+    on the Macintosh and LSC.  This is the only change which must be made
+    in the supplied sources to build the demo programs on the Mac.
+
+    To build the demo's with LSC, use the sctlkit.ms make file as a starting
+    point to build a project folder for a toolkit library.
+
+    For each demo program, you'll have to build the a project folder and
+    include the following:
+
+    <demo app>
+    demosup.c
+    lscmain.c
+    MacTraps    ( LSC library )
+    unix        ( LSC library )
+    stdio       ( LSC library )
+    Math        ( LSC library )
+    storage     ( LSC library )
+    strings     ( LSC library )
+    <dptoolkit library>
+

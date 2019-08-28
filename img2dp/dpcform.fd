@@ -1,0 +1,255 @@
+Magic: 12321
+
+Internal Form Definition File
+    (do not change)
+
+Number of forms: 1
+
+=============== FORM ===============
+Name: box1
+Width: 800.000000
+Height: 600.000000
+Number of Objects: 16
+
+--------------------
+class: 1
+type: 1
+box: 0.000000 0.000000 800.000000 600.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: 
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 1
+type: 1
+box: 0.000000 0.000000 800.000000 600.000000
+boxtype: 1
+colors: 4 1
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: 
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 1
+type: 2
+box: 420.000000 10.000000 370.000000 470.000000
+boxtype: 2
+colors: 47 47
+alignment: 0
+style: 1
+size: 16.000000
+lcol: 0
+label: Progress
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 1
+type: 2
+box: 530.000000 400.000000 240.000000 40.000000
+boxtype: 2
+colors: 47 47
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: - no file -
+name: sendfile
+callback: 
+argument: 0
+
+--------------------
+class: 1
+type: 2
+box: 10.000000 520.000000 780.000000 70.000000
+boxtype: 2
+colors: 47 47
+alignment: 4
+style: 1
+size: 16.000000
+lcol: 0
+label: Digital Palette Control Panel
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 1
+type: 2
+box: 10.000000 10.000000 400.000000 470.000000
+boxtype: 2
+colors: 47 47
+alignment: 0
+style: 1
+size: 16.000000
+lcol: 0
+label: Setup
+name: 
+callback: 
+argument: 
+
+--------------------
+class: 11
+type: 0
+box: 660.000000 540.000000 100.000000 30.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: Exit
+name: exit_pb
+callback: exit_cb
+argument: 0
+
+--------------------
+class: 42
+type: 0
+box: 90.000000 400.000000 300.000000 40.000000
+boxtype: 2
+colors: 47 0
+alignment: 2
+style: 0
+size: 10.000000
+lcol: 0
+label: Film Type
+name: filmtype
+callback: filmtype_cb
+argument: 0
+
+--------------------
+class: 42
+type: 0
+box: 90.000000 340.000000 300.000000 40.000000
+boxtype: 2
+colors: 47 0
+alignment: 2
+style: 0
+size: 10.000000
+lcol: 0
+label: Exposure
+name: exposure
+callback: exposure_cb
+argument: 0
+
+--------------------
+class: 11
+type: 0
+box: 90.000000 110.000000 300.000000 40.000000
+boxtype: 1
+colors: 47 47
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: Next Picture
+name: nextpicture_pb
+callback: nextpicture_cb
+argument: 0
+
+--------------------
+class: 62
+type: 1
+box: 90.000000 40.000000 300.000000 40.000000
+boxtype: 2
+colors: 47 1
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: Timer
+name: timer
+callback: timer_cb
+argument: 90
+
+--------------------
+class: 62
+type: 2
+box: 320.000000 450.000000 190.000000 60.000000
+boxtype: 2
+colors: 47 1
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: Timer
+name: updatetimer
+callback: updatetimer_cb
+argument: 0
+
+--------------------
+class: 21
+type: 1
+box: 530.000000 340.000000 240.000000 40.000000
+boxtype: 2
+colors: 47 47
+alignment: 2
+style: 0
+size: 10.000000
+lcol: 0
+label: Sending Color
+name: sendcolor
+callback: 
+argument: 
+
+--------------------
+class: 21
+type: 1
+box: 530.000000 200.000000 240.000000 40.000000
+boxtype: 2
+colors: 47 47
+alignment: 2
+style: 0
+size: 10.000000
+lcol: 0
+label: Exposing Color
+name: exposecolor
+callback: 
+argument: 
+
+--------------------
+class: 1
+type: 2
+box: 530.000000 260.000000 240.000000 40.000000
+boxtype: 2
+colors: 47 47
+alignment: 4
+style: 0
+size: 10.000000
+lcol: 0
+label: 
+name: exposefile
+callback: 
+argument: 0
+
+--------------------
+class: 42
+type: 0
+box: 90.000000 280.000000 300.000000 40.000000
+boxtype: 2
+colors: 47 0
+alignment: 2
+style: 0
+size: 10.000000
+lcol: 0
+label: Invert
+name: invert
+callback: invert_cb
+argument: 0
+
+==============================
+create_the_forms

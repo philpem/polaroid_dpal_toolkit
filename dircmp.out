@@ -1,0 +1,3762 @@
+
+
+Oct 30 14:28 1993  otkscsi only and sgiscsi only Page 1
+
+
+					    ./Makefile
+					    ./PathPars.o
+					    ./RLEncode.o
+					    ./dptkutil.o
+					    ./libtkscsi.a
+					    ./pathpars.c
+					    ./scdpinit.o
+					    ./scdpinqu.o
+					    ./scdprerr.o
+					    ./scdpscmd.o
+					    ./scdpsgi.o
+					    ./scdpsimg.o
+					    ./scdpsprm.o
+					    ./tkscsi.lib
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  Comparison of otkscsi sgiscsi Page 1
+
+
+directory	.
+different	./PathPars.c
+different	./RLEncode.c
+same     	./aspi.h
+same     	./aspidrvr.c
+different	./dpalette.h
+different	./dptkutil.c
+same     	./lscmain.c
+different	./moddef.inc
+different	./polatime.asm
+same     	./scdpaspi.c
+same     	./scdperrs.h
+same     	./scdpfdom.c
+different	./scdpinit.c
+different	./scdpinqu.c
+same     	./scdpmac.c
+same     	./scdpncr.c
+same     	./scdpps2.c
+different	./scdprerr.c
+same     	./scdpscmd.c
+different	./scdpsgi.c
+different	./scdpsimg.c
+same     	./scdpsprm.c
+same     	./sclowlvl.h
+different	./sctkread.me
+different	./sctlkit.ms
+same     	./tkdfpcmd.h
+different	./tkhost.h
+different	./tkinquir.h
+same     	./tkmodsel.h
+same     	./tkmodsen.h
+same     	./tksccmds.h
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./PathPars.c in otkscsi and sgiscsi Page 1
+
+
+39c39
+<       if (*ptr == '\\')
+---
+>       if (*ptr == '/')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./RLEncode.c in otkscsi and sgiscsi Page 1
+
+
+45a46
+>    int i;
+49a51,53
+> #ifdef DEBUG2
+>    printf("RLEncode: bytes: %d, from: %d, to: %d\n", NumBytes, in, out);
+> #endif
+73c77,81
+<          memmove(PacketByte, FirstPacketByte, PixelCount-1) ;
+---
+> #ifdef DEBUG2
+> 	 printf("line: %d, move %d bytes.\n", __LINE__, (PixelCount - 1));
+> #endif
+>          /* memmove(PacketByte, FirstPacketByte, PixelCount-1) ; */
+> 	 for(i=0; i<PixelCount-1; i++) PacketByte[i] = FirstPacketByte[i];
+109,110c117,122
+<                memmove(PacketByte, FirstPacketByte,
+<                   (PixelCount - 1 - PacketLength)) ;
+---
+> #ifdef DEBUG2
+> 	       printf("To: %ld, From: %ld\n", PacketByte, FirstPacketByte);
+> 	       printf("line: %d, move %d bytes.\n", __LINE__, (PixelCount - 1 - PacketLength));
+> #endif
+> 	       for(i=0; i<(PixelCount-1-PacketLength); i++) PacketByte[i] = FirstPacketByte[i];
+>                /* memmove(PacketByte, FirstPacketByte, (PixelCount - 1 - PacketLength)) ; */
+126c138,142
+<             memmove(PacketByte, FirstPacketByte, 1) ;
+---
+> #ifdef DEBUG2
+> 	     printf("line: %d, move %d bytes.\n", __LINE__, 1);
+> #endif
+> 	    PacketByte[0] = FirstPacketByte[0];
+>             /* memmove(PacketByte, FirstPacketByte, 1) ; */
+153c169,173
+<       memmove(PacketByte, FirstPacketByte, PixelCount) ;
+---
+> #ifdef DEBUG2
+>       printf("line: %d, move %d bytes.\n", __LINE__, PixelCount);
+> #endif
+>       for(i=0; i<PixelCount; i++) PacketByte[i] = FirstPacketByte[i];
+>       /* memmove(PacketByte, FirstPacketByte, PixelCount) ; */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 1
+
+
+106,111c106,111
+<    int             iPort ;
+<    int             iHorRes ;
+<    int             iVerRes ;
+<    int             iLineLength ;
+<    int             iHorOff ;
+<    int             iVerOff ;
+---
+>    short           iPort ;
+>    short           iHorRes ;
+>    short           iVerRes ;
+>    short           iLineLength ;
+>    short           iHorOff ;
+>    short           iVerOff ;
+124c124
+<    int             iVertHeight ;    /* number of lines of exposure data */
+---
+>    short           iVertHeight ;    /* number of lines of exposure data */
+164a165,173
+> 	Byte swapping code added for SGI:
+> */
+> #ifdef SGI
+> #define SSWAP(x) ( ((x) & 0x00ff)<<8 | ((x)>>8 & 0x00ff) )
+> #else
+> #define SSWAP(x) (x)
+> #endif
+>
+> /*
+281,377c290,372
+< #define DP_SCSIPORT(s)                (DP_OPTION_BYTE_ZERO(s) & 0x0 0x04)
+< #definROt-S_BYTLha)      B04)
+< #definde cMleg & 0x, f0x0 0x04finROts ascii */
+<   f]      ((s)->unF
+< #d(s)->uc& 0x0 0x04)
+< #definROtIO_SIZE] ;     ((s)->unFilonB(s)->uc& 0x0 0x04)
+< #dfinROtIO_SIZEe ;
+<   (DP_STATUS_BYAUTO  C 0x02)
+< #definefine DP_OPTIsgTerm ;
+<   (DP_STATUS_BYAUTO nd m640 : 128)
+< #defi(S_BYAUTO  C 0x02)    7   (DP_STATUS_BYAUTO DESCRICSIPO640 : 128)finROt-eraCode ;     B04)
+< #def   ADV((a 02)
+< #definefine D(S_BYAUTO nd m640 ==A_35MM      ) ||P_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (S_BYAUTO nd m640 ==A_35MM      )     (((a) > ((s)NUALEJde 02)
+< #definefine D(S_BYAUTO nd m640 ==A_35MM  ack ) ||P_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (S_BYAUTO nd m640 ==A_35MM     )     (((a) > ((     r  Buc& 0x0 0x04)
+< #definROtIra msg */
+<     (((a) > ((     Mleg & 0x0x0 0x04)
+< #dfinROt byte 0 *    (((a) > ((     CLASnes)
+< #define
+< #definROtIra msr */    (((a) > ((DPALETTer *ITILT_Z) >> 5)
+< finROts class */
+<       (((a) > ((DPALETTermagI0x04)
+< #define DP_STed flag   (DP_STATUS_BYONFIG     & 0x0 0x04)
+< #def ((     CLASnes)==A_ONFIG     (DP_STATUS_B         & 0x0 0x04)
+< #dene D(S_B     CLASnes)E_LShortTiGROUN_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (S_B     CLASnes)>A_ONFIG         (((a) > ((PRFileH     & 0x0 0x04)
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 2
+
+
+< #d D(S_B     CLASnes)>LShortTiGROUN_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (S_B     CLASnes)<und           (((a) > ((is SET 640 : 128)
+< #define D(S_B     CLASnes)>Lnd          (((a) > ((     640 : 128)
+< #define e D(S_B     CLASnes)<und           B04)
+< #defullOKAY640 : 128)
+< #define f ((     CLASnes)==And           B04)
+< #deDEVIa <r   & 0x0 0x04)
+< #definROt-DeviceNraC  (DP_STATUS_B    640 : 128)
+< #define e efinROtIPTIM  (DP_STATUS_B>uc_yte0)
+< #defineefine e efinROtIHorRs)           ((sERO_yte0)
+< #defineefine e efinROtIVerRs)           ((sgI0x   sGTH& 0x0 0x04)
+< #definROtIED(s    cI  (DP_STATUS_B>uc_o cNG es)
+< #define
+< #definROtIHorOf   (DP_STATUS_BERO_o cNG es)
+< #define
+< #definROtIVerOf   (DP_STATUS_B >=  0) &&ter legali>> 5)
+< finROtsIp  (DP_STATUS_B >=  0) &&Ug & 0x0x0 0x04)finROtsIu  (DP_STATUS_B >= the buffer *g)
+< #define DP_OPfer  (DP_STATUS_B >= ULT_CALIBRA0x0x0 0x04)finROtsC
+<   (DP_STATUS_BFilleH_(s) & 0x1f)
+< #define DnROtIa packet */           ((sgI#defNl legE & 0x0 0x04)
+< finROtsLiteDark           ((s)->uiExpoShor0x, c
+< #define DP_OPTIaS_EXPEOUT[c]      ((s)->unolo_ >= 0) & 0x1f)
+< #define ((s)->uiExpoShor0x,       (((a) >((s
+< #de_ >= 0) & 0x1f)
+< #defi ((s)->uiExpoShor0x, L(a)    (((a) ((s
+< #d_ >= 0) & 0x1f)
+< #defin ((s)->uiExpoShor0x, 2(a)    (((a) ((= 50) &&0x, c
+< #defineefine DP_OPTIaLuminant[c]      ((s)->unolo_= 50) &&0xx1f)
+< #define ((s= 50) &&0x,       (((a) >((s
+< #de_= 50) &&0xx1f)
+< #defi ((s= 50) &&0x, L(a)    (((a) ((s
+< #d_= 50) &&0xx1f)
+< #defin ((s= 50) &&0x, 2(a)    (((a) ((= 50) && ((a 0x, c
+< #define DP_OPcaet */Bal[c]      ((s)->unolo_= 50) && ((a 0x0 : 128)f ((= 50) && ((a 0x,       (((a) >((s
+< #de_= 50) && ((a 0x0 : 12f ((= 50) && ((a 0x, L(a)    (((a) ((s
+< #d_= 50) && ((a 0x0 : 128f ((= 50) && ((a 0x, 2(a)    (((a) ((=35MM   DJUS&0x, f_DE
+< #definP_OPcaeamAdjust f][d]      ((s)->un=35MM   DJUS&_X0x, f0x0 0x0(S_BYAUTO   DJUS&0x, f_D      (((a) >((s=35MM   DJUS&_Y0x, f0x0 0x0(S_BYAUTO   DJUS&0x, f_DL(a)    (((a) ((=35MM   DJUS&_Z0x, f0x0 0x0(S_BYAUTO   DJUS&0x, f_D2(a)    (((a) ((FilM_TsBytnFile0x, f0x0 0x0(inROt-aa pmR(s) f]      ((s)->unFilM_r   & , f0x0 0x040 0x0(inROt-aa pmNraC f]      ((s)->unFilM_g SuE&&0x, f0x0 0x040  f ((FilM_r   &inR,(f))[
+< 	!= '\0'      B04)
+< #deDEe withFilM0x, c
+< #definee DP_OPTIaa pmN */
+< [c]      ((s)->unERO_HEI#dees)
+< #define
+< #definROtIVertHeigh)            ((s Mode leges)
+< #define
+< #definROtc) >= a)    (((a) ((sd mode legalit0x0x0 0x04)finROtsBkgndM;
+<   (DP_STATUS_Bsd mode legPIX_VALsByte1)
+<  DP_OPTIBkgndValu
+<   (DP_STATUS_BingRO_LEFT_(s) & 0, c
+< #def DP_OPTIaUl_corner_     [c]      ((s)->uningRO_Rntrol(s) & 0, c
+< #de DP_OPTIaUr_corner_     [c]      ((s)->un DERO_LEFT_(s) & 0, c
+< #def DP_OPTIaLl_corner_     [c]      ((s)->un DERO_Rntrol(s) & 0, c
+< #de DP_OPTIaLr_corner_     [c]      ((s)->un= 50) TsByte0, c, l0 : 128)finROtTIaCtT    [c][l]      ((s)->unolo_= 50) TsByte0, l0 : 128f ((= 50) TsByte0, 0, l0    (((a) >((s
+< #de_= 50) TsByte0, l0 : 1f ((= 50) TsByte0, 1, l0    (((a) >((ss
+< #d_= 50) TsByte0, l0 : 12f ((= 50) TsByte0, 2, l0    (((a) >((sWAITFORs)->uc& 0x0 0x04)
+< #finROtsWaitF*/B_SIZE(s)         ((s)->u(= Mg Su(s) & 0x0 0x04finROtsI    Compr 0  RSION(s)        finde cALIBR0x, f_DXorY) 12f ((FilM_g SuE&&0inR,(f))(DP_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           finROts ascii */
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 3
+
+
+<   f][XorY])    ION(s)        X finde & , f0x0 0x040 0x02f ((finde cALIBR0x, f_D      (((a) >((sY finde & , f0x0 0x040 0x02f ((finde cALIBR0x, f_DL(a)    (((a) ((FilMr  Buc& 0x0 0x04)
+< #dee DP_OPTIaa pmN */
+< [(S_BYAUTO nd m640)]      ((s)->unBLd m MaWHITEFilM0x, f0 : 1f ((FilM_g SuE&&0inR,(f))(
+< #deeOUN_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (inROt-aa pmNraC f][
+< 	==A'B'      B04)
+< #deFilMWASDOWNL AD) >>, f0 : 1f ((FilM_g SuE&&0inR,(f))(
+< #deeOUN_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (inROt-aa pmNraC f][1
+< 	==A'D'      B04)
+< #deYAUTO nd mFilM0x, f0 : 1: 1f ((FilM_g SuE&&0inR,(f))(
+< #deeOUN_OPTION_BYTE_ZERO(s) & 0x02) ? \
+<           (inROt-aa pmNraC f][2
+< 	==A'*'GAL(a) (((a) Reefinend   EOUTout limitL
+---
+> #define DP_SCSIPORT(s)                (DP_OPTION_BYTE_ZERO(s) & 0x04)
+> #define DP_ROM_VERSION(s)             ((s)->sOptionsMsg)
+> #define DP_ASPECT_MESSAGE(s, f)       ((s)->caAspectRatio[f])
+> #define DP_FREE_BUFFER(s)             ((s)->iBufferFree)
+> #define DP_TOTAL_BUFFER(s)            ((s)->iBufferTotal)
+> #define DP_CAMERA_CODE(s)             ((s)->ucCameraCode)
+> #define DP_CAMERABACK(s)              (DP_CAMERA_CODE(s) & 0x7f)
+> #define DP_CAMERADESCRIPTION(s)       ((s)->sCameraMsg)
+> #define DP_AUTOADVANCE(s)             (((DP_CAMERABACK(s) == CAMERA_AUTO) || \
+>                                          (DP_CAMERABACK(s) == CAMERA_35MM)))
+> #define DP_MANUALEJECT(s)             (((DP_CAMERABACK(s) == CAMERA_PACK) || \
+>                                          (DP_CAMERABACK(s) == CAMERA_4X5)))
+> #define DP_ERRORNUMBER(s)             ((s)->iErrorNumber)
+> #define DP_ERRORMESSAGE(s)            ((s)->sErrorMsg)
+> #define DP_ERRORCLASS(s)              ((s)->iErrorClass)
+> #define DP_DPALETTE_INITIALIZED(s)    ((s)->cDPinitialized)
+> #define DP_DPALETTE_ONLINE(s)         ((s)->cDPfound)
+> #define DP_CONFIGERROR(s)             (DP_ERRORCLASS(s) == CONFIGERR)
+> #define DP_PORTERROR(s)               (((DP_ERRORCLASS(s) <= TIMEOUT) && \
+>                                          (DP_ERRORCLASS(s) > CONFIGERR)))
+> #define DP_PRINTERERROR(s)            (((DP_ERRORCLASS(s) > TIMEOUT) && \
+>                                          (DP_ERRORCLASS(s) < NOERROR)))
+> #define DP_WARNING(s)                 ((DP_ERRORCLASS(s) > NOERROR))
+> #define DP_ERROR(s)                   ((DP_ERRORCLASS(s) < NOERROR))
+> #define DP_ALL_OKAY(s)                ((DP_ERRORCLASS(s) == NOERROR))
+> #define DP_DEVICE_NAME(s)             ((s)->sDeviceName)
+> #define DP_PORT(s)                    ((s)->iPort)
+> #define DP_HOR_RES(s)                 ((s)->iHorRes)
+> #define DP_VER_RES(s)                 ((s)->iVerRes)
+> #define DP_LINE_LENGTH(s)             ((s)->iLineLength)
+> #define DP_HOR_OFFSET(s)              ((s)->iHorOff)
+> #define DP_VER_OFFSET(s)              ((s)->iVerOff)
+> #define DP_EXP_IMAGE_PROCESSING(s)    ((s)->cIp)
+> #define DP_EXP_IMAGE_USAGE(s)         ((s)->cIu)
+> #define DP_EXP_BUFFER_USAGE(s)        ((s)->cBu)
+> #define DP_EXP_CALIBRATION(s)         ((s)->cCal)
+> #define DP_FILTER_COLOR(s)            ((s)->iFilterColor)
+> #define DP_LIGHTEN_DARKEN(s)          ((s)->cLiteDark)
+> #define DP_EXPOSURE_TIME(s, c)        ((s)->ucaExposTime[c])
+> #define DP_RED_EXP_TIME(s)            (DP_EXPOSURE_TIME(s, 0))
+> #define DP_GREEN_EXP_TIME(s)          (DP_EXPOSURE_TIME(s, 1))
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 4
+
+
+> #define DP_BLUE_EXP_TIME(s)           (DP_EXPOSURE_TIME(s, 2))
+> #define DP_LUMINANT(s, c)             ((s)->ucaLuminant[c])
+> #define DP_RED_LUMINANT(s)            (DP_LUMINANT(s, 0))
+> #define DP_GREEN_LUMINANT(s)          (DP_LUMINANT(s, 1))
+> #define DP_BLUE_LUMINANT(s)           (DP_LUMINANT(s, 2))
+> #define DP_COLOR_BALANCE(s, c)        ((s)->caColorBal[c])
+> #define DP_RED_COLOR_BALANCE(s)       (DP_COLOR_BALANCE(s, 0))
+> #define DP_GREEN_COLOR_BALANCE(s)     (DP_COLOR_BALANCE(s, 1))
+> #define DP_BLUE_COLOR_BALANCE(s)      (DP_COLOR_BALANCE(s, 2))
+> #define DP_CAMERA_ADJUST(s, f, d)     ((s)->caCamAdjust[f][d])
+> #define DP_CAMERA_ADJUST_X(s, f)      (DP_CAMERA_ADJUST(s, f, 0))
+> #define DP_CAMERA_ADJUST_Y(s, f)      (DP_CAMERA_ADJUST(s, f, 1))
+> #define DP_CAMERA_ADJUST_Z(s, f)      (DP_CAMERA_ADJUST(s, f, 2))
+> #define DP_FILM_TABLE_FILE(s, f)      ((s)->saFilmFile[f])
+> #define DP_FILM_NAME(s, f)            ((s)->saFilmName[f])
+> #define DP_FILM_PRESENT(s, f)         ((DP_FILM_NAME((s),(f))[0] != '\0'))
+> #define DP_DEFAULT_FILM(s, c)         ((s)->ucaFilmNumber[c])
+> #define DP_VER_HEIGHT(s)              ((s)->iVertHeight)
+> #define DP_SERVO_MODE(s)              ((s)->cServo)
+> #define DP_BACKGROUND_MODE(s)         ((s)->cBkgndMode)
+> #define DP_BACKGROUND_PIX_VALUE(s)    ((s)->ucBkgndValue)
+> #define DP_UPPER_LEFT_COLOR(s, c)     ((s)->ucaUl_corner_color[c])
+> #define DP_UPPER_RIGHT_COLOR(s, c)    ((s)->ucaUr_corner_color[c])
+> #define DP_LOWER_LEFT_COLOR(s, c)     ((s)->ucaLl_corner_color[c])
+> #define DP_LOWER_RIGHT_COLOR(s, c)    ((s)->ucaLr_corner_color[c])
+> #define DP_COLOR_TABLE(s, c, l)       ((s)->ucaCtTable[c][l])
+> #define DP_RED_COLOR_TABLE(s, l)      (DP_COLOR_TABLE(s, 0, l))
+> #define DP_GREEN_COLOR_TABLE(s, l)    (DP_COLOR_TABLE(s, 1, l))
+> #define DP_BLUE_COLOR_TABLE(s, l)     (DP_COLOR_TABLE(s, 2, l))
+> #define DP_WAITFORBUFFER(s)           ((s)->cWaitForBuffer)
+> #define DP_IMAGE_COMPRESSION(s)       ((s)->cImageCompression)
+> #define DP_ASPECT_RATIO(s, f, XorY)   (DP_FILM_PRESENT((s),(f)) ? \
+>                                          ((s)->caAspectRatio[f][XorY]) : 1)
+> #define DP_X_ASPECT(s, f)             (DP_ASPECT_RATIO(s, f, 0))
+> #define DP_Y_ASPECT(s, f)             (DP_ASPECT_RATIO(s, f, 1))
+> #define DP_FILMNUMBER(s)              ((s)->ucaFilmNumber[(DP_CAMERABACK(s))])
+> #define DP_BLACKANDWHITEFILM(s, f)    (DP_FILM_PRESENT((s),(f))      && \
+>                                          ((s)->saFilmName[f][0] == 'B'))
+> #define DP_FILMWASDOWNLOADED(s, f)    (DP_FILM_PRESENT((s),(f))      && \
+>                                          ((s)->saFilmName[f][1] == 'D'))
+> #define DP_CAMERABACKFILM(s, f)       (DP_FILM_PRESENT((s),(f))      && \
+>                                          ((s)->saFilmName[f][2] == '*'))
+379,382d373
+< /lTIM     s_TIM tOUTouts.   ((sassPr     ()((a) YNAs theseFULlu
+< s.  EOUTout limitLother than theseFULlu
+< s mne be YNA((a) afs
+<  a succ 0 full re <=n from  ((sassPr     ()3))
+384,396c375,380
+<  * ServoT Ma 409ShortTi */   4/
+< #de   ((s)->sTKversion_LE minurt, vary exp. r)->uiShortTid.
+<  */x2aa8
+< #de  )->uiShortTimeOu_LE0 minurtsAR    1 /* Linra mss     Warnings re <=n   from Toolkit 0) tD(s)3))
+<  TheseFULlu
+< s a= 1always currentACK >= 0) &&ea ms c */ons for Background               0ary exp. r)-GIa R         -1ary exp. rH 40W R         -2ary exp. rShortTid.
+<  */  -3    B04)
+< #IS_ONNde Eand.-4    B04)
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 5
+
+
+< UNKNOWN     */  -5   (((a) >= NFIG
+<  */  -6    B04)
+< #dileIO.F
+<  *-7* Backgroun)->ucis SET d */     (((a) >=uiExpACTIVE */2ary exp. rR & VEFilM
+<  */  3   1 /* LinCFG(     &ea ms n */
+---
+>  * Recommended Timeout limits for long and short timeouts.  DP_InitPrinter()
+>  * sets these values.  Timeout limits other than these values may be set
+>  * after a successfull return from DP_InitPrinter().
+>  */
+> #define STANDARD_TIMEOUT   0x0444 /* DP_SHORT_TIMEOUT(s) = 1 minute */
+> #define LONG_TIMEOUT       0x2aa8 /* DP_LONG_TIMEOUT(s) = 10 minutes */
+399,401c383,396
+<  * DP_DATA CFG(NO_ENVIRONME&&d */     (((a)CFG(FileIOPde_        2ary exp. rCFG(FileIxpAD_        3    B04)
+< CFG(    _              ary exp. rCFG(FilMIOPde_        5   1 /* Lincas
+< #dileIO.F   ea ms n */
+---
+>  * Errors and Warnings returned from Toolkit routines.
+>  * These values are always current in DP_DATA error class.
+>  */
+> #define NOERROR          0
+> #define LOGICERR        -1
+> #define HARDWERR        -2
+> #define TIMEOUT         -3
+> #define DISCONNECTED    -4
+> #define UNKNOWNPORT     -5
+> #define CONFIGERR       -6
+> #define DPTOOLKITERR    -7
+> #define BUFFERWARNING    1
+> #define EXPOSUREACTIVE   2
+> #define REMOVEFILM       3
+404,405c399,405
+<  * DP_DATA TKBsdD(s)G(= Mg            (((a)TKBsdD(F  McMlTHOand.2   1 /* LinGesPr     OSURE_()ACKquiry flags toACKdicart,whichACKquries toAmake of the * Lin      Digi;
+<  Palette.  Eheyncan be OR'd together
+---
+>  * CFG_ERROR error numbers
+>  */
+> #define CFG_NO_ENVIRONMENT    1
+> #define CFG_FILE_OPEN_ERROR   2
+> #define CFG_FILE_READ_ERROR   3
+> #define CFG_PORT_ERROR        4
+> #define CFG_FILM_OPEN_ERROR   5
+407,408c407,411
+< /multipleACKquirieons for BackgrouSta_              00     (((a)Sta_YAUTO         002ary exp. rSta_SCSIPOS       00 ary exp. rSta_sedLin        008ary exp. rSta_FilMS         010ary exp. rSta_finde         020ary exp. rSta_n)->uc        040ary exp. rfullStatIRIES     07f   1 /* LinI     compr 0  RSons for BackgroundN_RleIuE&D_fi_Rle
+< #dackault; compr 0  be
+---
+> /*
+>  * case DPTOOLKITERR error numbers
+>  */
+> #define TK_BAD_IMG_COMP       1
+> #define TK_BAD_TERM_METHOD    2
+410,428c413,424
+< e YNKdiIM for BackgroundN_Rle02) ? \
+<           1
+< #duncompr 0 ed, YNKdduncompr 0 ed for BackgrouRle02) ? \
+<           nd.2
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 6
+
+
+< #dcompr 0 ed, YNKddcompr 0 ed for Backgrou= Mg Su(s) _LEGAL(a0x0 0x0(i(a0x>=D  eOUNi(a0xE_L2GAL(a) (((a) I     TerminaBYTLns for BackgrouE&D_OFs)->uiExp       nd.
+< #dnorm
+<  e_EXPu
+< e terminaBYTL    nd.for BackgrouAB   _ ->uiExp       nd. 1
+< #dabTIM al
+<  e_EXPu
+< esACK queue   nd.for BackgrouSMA  _AB
+<           nd.2
+< #dterminaBe laBestAC    , Yave queue
+<  * DP_DATA T  McMlTHOa_LEGAL(a0x0 0x0(i(a0x>=D  eOUNi(a0xE_L2GAL(a)a) (         ID_o cNG  is u ed toAdetermint,whether we'r  connii ed toAtheOPTIONPalette via a CentronicLor           face.  EheUS_B     n */
+<  isOPTIONaNParal
+< e
+<  PTIM (CentronicL)ACf it is between           ID_o cNG  - 1.OPTIONIf the S_B     n */
+<  is YNA toAaFULlu
+<  from  ((    ID_o cNG  orOPTIONabov , thenAaFconnii YTL is made via the
+---
+> /*
+>  * GetPrinterStatus() inquiry flags to indicate which inquries to make of the
+>  *       Digital Palette.  They can be OR'd together for multiple inquiries.
+>  */
+> #define INQ_ERROR       0x0001
+> #define INQ_CAMERA      0x0002
+> #define INQ_OPTIONS     0x0004
+> #define INQ_STATUS      0x0008
+> #define INQ_FILMS       0x0010
+> #define INQ_ASPECT      0x0020
+> #define INQ_BUFFER      0x0040
+> #define ALL_INQUIRIES   0x007f
+430,479c426,494
+<  * DP_DATA  ((    ID_o cNG    10ara) (((a) Toolkit func YTL prototypeons for Bifnd f
+< #diKUTIL_C
+< ex   n char   nd.f>((setConfigPath(voiE
+< ;
+< ex   n voiE     nd. (( leep(
+< ;
+< ex   n          nd. ((F(s)Open(>= 0) &&*, char *
+< ;
+< ex   n          nd. ((F(s)Read(>= 0) &&*, char *,
+< ;
+< ex   n          nd. ((F(s)Close(>= 0) &&*
+< ;
+< ex   n unsign       >unoLEncode(char *, char *,
+< ;
+< ex   n voiE     nd. ((PathParse(char *, char *, char *, char *, char *
+< ;
+< #NKdif   1Bifnd f
+< #d *IT_C
+< ex   n     >unsassPr     (>= 0) &&*,    ,
+< ;
+< ex   n     >= 0ownLoada pms(>= 0) &&*, char *,
+< ;
+< #NKdif   1Bifnd f
+< #dSNDP McC
+< ex   n     >unOSUrtE_EXPu
+< e(>= 0) &&*
+< ;
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 7
+
+
+< ex   n     >unONKdPr     Params(>= 0) &&*
+< ;
+< ex   n     >unTerminaBeE_EXPu
+< e(>= 0) &&*,
+< ;
+< #NKdif   1Bifnd f
+< #dStatIRcC
+< ex   n     >unGesPr     OSURE_(>= 0) &&*,
+< ;
+< #NKdif   1Bifnd f
+< #dSNDs)G(=
+< ex   n     >unONKdI    Data(>= 0) &&*,    , char *,   ,
+< ;
+< #NKdif   1Bifnd f
+< PATHPARS(=
+< ex   n voiE PathParse(char *, char *, char *, char *, char *
+< ;
+< #NKdif   1Bifnd f
+< oLENClit(=
+< ex   n unsign       oLEncode(char *, char *,
+< ;
+< #NKdif   1 ( polaBOUT.asmns for ex   n voiE WaitF*/Ticks(unsign
+< ;
+---
+> /*
+>  * Image compression.
+>  */
+> #define NON_RLE_SEND_AS_RLE       0 /* default; compress before sending */
+> #define NON_RLE                   1 /* uncompressed, send uncompressed */
+> #define RLE                       2 /* compressed, send compressed */
+> #define COMPRESSION_LEGAL(a)      (((a) >= 0) && ((a) <= 2))
+>
+> /*
+>  * Image Termination
+>  */
+> #define END_OF_EXPOSURE           0 /* normal exposure termination        */
+> #define ABORT_EXPOSURE            1 /* abort all exposures in queue       */
+> #define SMART_ABORT               2 /* terminate latest image, save queue */
+> #define TERM_METHOD_LEGAL(a)      (((a) >= 0) && ((a) <= 2))
+>
+>
+> /*  DP_SCSIID_OFFSET is used to determine whether we're connected to the
+>     Palette via a Centronics or SCSI interface.  The DP_PORT number is
+>     a Parallel Port (Centronics) if it is between 0 and DP_SCSIID_OFFSET - 1.
+>     If the DP_PORT number is set to a value from DP_SCSIID_OFFSET or
+>     above, then a connection is made via the SCSI
+> */
+> #define DP_SCSIID_OFFSET  0x10
+>
+> /*
+>  * Toolkit function prototypes.
+>  */
+> #ifndef DPTKUTIL_C
+> extern char       * DP_GetConfigPath(void) ;
+> extern void         DP_Sleep(int) ;
+> extern int          DP_FileOpen(DP_DATA *, char *) ;
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dpalette.h in otkscsi and sgiscsi Page 8
+
+
+> extern int          DP_FileRead(DP_DATA *, char *, int) ;
+> extern int          DP_FileClose(DP_DATA *) ;
+> extern unsigned int DP_RLEncode(char *, char *, int) ;
+> extern void         DP_PathParse(char *, char *, char *, char *, char *) ;
+> extern void	    DP_SwapShorts(DP_DATA *) ;
+> #endif
+>
+> #ifndef DPINIT_C
+> extern int DP_InitPrinter(DP_DATA *, int, int) ;
+> extern int DP_DownLoadFilms(DP_DATA *, char *, int) ;
+> #endif
+>
+> #ifndef DPSNDPRM_C
+> extern int DP_StartExposure(DP_DATA *) ;
+> extern int DP_SendPrinterParams(DP_DATA *) ;
+> extern int DP_TerminateExposure(DP_DATA *, int) ;
+> #endif
+>
+> #ifndef DPINQUIR_C
+> extern int DP_GetPrinterStatus(DP_DATA *, int) ;
+> #endif
+>
+> #ifndef DPSNDIMG_C
+> extern int DP_SendImageData(DP_DATA *, int, char *,int,int) ;
+> #endif
+>
+> #ifndef PATHPARS_C
+> extern void PathParse(char *, char *, char *, char *, char *) ;
+> #endif
+>
+> #ifndef RLENCODE_C
+> extern unsigned int RLEncode(char *, char *, int) ;
+> #endif
+>
+> /* polatime.asm
+>  */
+> extern void WaitForTicks(unsigned int) ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./dptkutil.c in otkscsi and sgiscsi Page 1
+
+
+19a20
+> void	     DP_SwapShorts(DP_DATA *) ;
+48c49
+< 	WaitForTicks(secs * 18) ;
+---
+> 	sleep(secs) ;
+131a133,145
+>
+> void DP_SwapShorts(dp)
+> DP_DATA *dp;
+> {
+>   dp->iPort = SSWAP(dp->iPort);
+>   dp->iHorRes = SSWAP(dp->iHorRes);
+>   dp->iVerRes = SSWAP(dp->iVerRes);
+>   dp->iLineLength = SSWAP(dp->iLineLength);
+>   dp->iHorOff = SSWAP(dp->iHorOff);
+>   dp->iVerOff = SSWAP(dp->iVerOff);
+>   dp->iVertHeight = SSWAP(dp->iVertHeight);
+> }
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./moddef.inc in otkscsi and sgiscsi Page 1
+
+
+1,100c1,100
+< ;  DEC/CMS REPLACEMENT HISTORY, Element MODDEF.INC
+< ;  *2     3-MAY-1991 12:07:48 BROGNA ""
+< ;  *1    29-NOV-1990 17:02:28 BROGNA "Version 2.21"
+< ;  DEC/CMS REPLACEMENT HISTORY, Element MODDEF.INC
+< ; define memory model for library assembly code
+< ; Copyright (C) 1988, 1989, 1990, 1991 Polaroid Corporation
+< ;
+< ; The memory model (LARGE, MEDIUM, COMPACT, or SMALL) must be DEFINEd before
+< ; this file is INCLUDEd.  Either define it as a command line arg to masm or
+< ; define it in the source code file before the include command.
+<
+< DOSSEG
+<
+< ifdef LARGE
+<    .MODEL large
+<    if1
+<       %out LARGE Model Assembly
+<    endif
+< endif
+<
+< ifdef MEDIUM
+<    .MODEL medium
+<    if1
+<       %out MEDIUM Model Assembly
+<    endif
+< endif
+<
+< ifdef COMPACT
+<    .MODEL compact
+<    if1
+<       %out COMPACT Model Assembly
+<    endif
+< endif
+<
+< ifdef SMALL
+<    .MODEL small
+<    if1
+<       %out SMALL Model Assembly
+<    endif
+< endif
+<
+< if @codesize
+<    .CODE @filename
+< else
+<    .CODE
+< endif
+<
+< if @datasize
+<    .FARDATA
+<    .FARDATA?
+< endif
+<
+<    .DATA
+<    .CONST
+<    .DATA?
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./moddef.inc in otkscsi and sgiscsi Page 2
+
+
+<    .STACK
+<
+< if @codesize
+<    @ab equ 6
+< else
+<    @ab equ 4
+< endif
+<
+< ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+<
+< code_seg   macro
+<    if @codesize
+<       .CODE @filename
+<    else
+<       .CODE
+<    endif
+< endm
+<
+< data_seg   macro
+<    .DATA
+< endm
+<
+< extfunct macro X
+<    EXTRN _&X:PROC
+< endm
+<
+< pubproc macro X
+<    PUBLIC _&X
+< endm
+<
+< procedure macro X
+<    _&X PROC
+< endm
+<
+< endproc macro X
+<    _&X ENDP
+< endm
+<
+< callx macro X
+<    if @codesize
+<       call far ptr _&X
+<    else
+<       call _&X
+<    endif
+< endm
+---
+> ;  DEC/CMS REPLACEMENT HISTORY, Element MODDEF.INC
+> ;  *2     3-MAY-1991 12:07:48 BROGNA ""
+> ;  *1    29-NOV-1990 17:02:28 BROGNA "Version 2.21"
+> ;  DEC/CMS REPLACEMENT HISTORY, Element MODDEF.INC
+> ; define memory model for library assembly code
+> ; Copyright (C) 1988, 1989, 1990, 1991 Polaroid Corporation
+> ;
+> ; The memory model (LARGE, MEDIUM, COMPACT, or SMALL) must be DEFINEd before
+> ; this file is INCLUDEd.  Either define it as a command line arg to masm or
+> ; define it in the source code file before the include command.
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./moddef.inc in otkscsi and sgiscsi Page 3
+
+
+>
+> DOSSEG
+>
+> ifdef LARGE
+>    .MODEL large
+>    if1
+>       %out LARGE Model Assembly
+>    endif
+> endif
+>
+> ifdef MEDIUM
+>    .MODEL medium
+>    if1
+>       %out MEDIUM Model Assembly
+>    endif
+> endif
+>
+> ifdef COMPACT
+>    .MODEL compact
+>    if1
+>       %out COMPACT Model Assembly
+>    endif
+> endif
+>
+> ifdef SMALL
+>    .MODEL small
+>    if1
+>       %out SMALL Model Assembly
+>    endif
+> endif
+>
+> if @codesize
+>    .CODE @filename
+> else
+>    .CODE
+> endif
+>
+> if @datasize
+>    .FARDATA
+>    .FARDATA?
+> endif
+>
+>    .DATA
+>    .CONST
+>    .DATA?
+>    .STACK
+>
+> if @codesize
+>    @ab equ 6
+> else
+>    @ab equ 4
+> endif
+>
+> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+>
+> code_seg   macro
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./moddef.inc in otkscsi and sgiscsi Page 4
+
+
+>    if @codesize
+>       .CODE @filename
+>    else
+>       .CODE
+>    endif
+> endm
+>
+> data_seg   macro
+>    .DATA
+> endm
+>
+> extfunct macro X
+>    EXTRN _&X:PROC
+> endm
+>
+> pubproc macro X
+>    PUBLIC _&X
+> endm
+>
+> procedure macro X
+>    _&X PROC
+> endm
+>
+> endproc macro X
+>    _&X ENDP
+> endm
+>
+> callx macro X
+>    if @codesize
+>       call far ptr _&X
+>    else
+>       call _&X
+>    endif
+> endm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./polatime.asm in otkscsi and sgiscsi Page 1
+
+
+1,75c1,75
+< ;  DEC/CMS REPLACEMENT HISTORY, Element POLATIME.ASM
+< ;  *5     3-MAY-1991 12:08:25 BROGNA ""
+< ;  *4    18-JAN-1991 04:55:58 BROGNA "MSC 6.0x"
+< ;  *3    29-NOV-1990 16:58:53 BROGNA "Version 2.21"
+< ;  *2     3-OCT-1990 15:14:53 BROGNA "Single data structure"
+< ;  *1    12-SEP-1990 11:03:29 BROGNA "ToolKit Upgrade"
+< ;  DEC/CMS REPLACEMENT HISTORY, Element POLATIME.ASM
+< ; PolaTime.ASM - clock routines
+< ;
+< ; Copyright (C) 1988, 1989, 1990, 1991  Polaroid Corporation
+< ;
+<
+< include moddef.inc
+<
+< pubproc WaitForTicks
+<
+< data_seg
+<
+< ClockLow       dw 0
+< ClockHigh      dw 0
+<
+< code_seg
+<
+< NumTicks     equ     @ab
+<
+< ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+< ;WaitForTicks(NumTicks)
+< ;   int   NumTicks   ; number of clock ticks to wait
+< ;
+< procedure WaitForTicks
+<
+<    push     bp
+<    mov      bp, sp
+<    push     cx
+<    push     dx
+<
+<    xor      ax, ax
+<    int      1Ah
+<
+<    mov      ClockHigh, cx
+<    mov      ClockLow, dx
+<    mov      ax, NumTicks[bp]   ; number of ticks to wait for
+<    add      ClockLow, ax
+<    adc      ClockHigh, 0
+<    cmp      ClockHigh, 24
+<    jb       WFT1
+<    mov      ClockHigh, 0
+<
+< WFT0:
+<    xor      ax, ax             ; wait for a new day
+<    int      1Ah
+<    cmp      cx, 0
+<    jne      WFT0
+<
+< WFT1:
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./polatime.asm in otkscsi and sgiscsi Page 2
+
+
+<    xor      ax, ax
+<    int      1Ah
+<    cmp      cx, ClockHigh
+<    jb       WFT1
+<    ja       WFT3
+<
+< WFT2:
+<    cmp      dx, ClockLow
+<    jb       WFT1
+<
+< WFT3:
+<    pop      dx
+<    pop      cx
+<    pop      bp
+<
+<    ret
+<
+< endproc WaitForTicks
+<
+< END
+---
+> ;  DEC/CMS REPLACEMENT HISTORY, Element POLATIME.ASM
+> ;  *5     3-MAY-1991 12:08:25 BROGNA ""
+> ;  *4    18-JAN-1991 04:55:58 BROGNA "MSC 6.0x"
+> ;  *3    29-NOV-1990 16:58:53 BROGNA "Version 2.21"
+> ;  *2     3-OCT-1990 15:14:53 BROGNA "Single data structure"
+> ;  *1    12-SEP-1990 11:03:29 BROGNA "ToolKit Upgrade"
+> ;  DEC/CMS REPLACEMENT HISTORY, Element POLATIME.ASM
+> ; PolaTime.ASM - clock routines
+> ;
+> ; Copyright (C) 1988, 1989, 1990, 1991  Polaroid Corporation
+> ;
+>
+> include moddef.inc
+>
+> pubproc WaitForTicks
+>
+> data_seg
+>
+> ClockLow       dw 0
+> ClockHigh      dw 0
+>
+> code_seg
+>
+> NumTicks     equ     @ab
+>
+> ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+> ;WaitForTicks(NumTicks)
+> ;   int   NumTicks   ; number of clock ticks to wait
+> ;
+> procedure WaitForTicks
+>
+>    push     bp
+>    mov      bp, sp
+>    push     cx
+>    push     dx
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./polatime.asm in otkscsi and sgiscsi Page 3
+
+
+>
+>    xor      ax, ax
+>    int      1Ah
+>
+>    mov      ClockHigh, cx
+>    mov      ClockLow, dx
+>    mov      ax, NumTicks[bp]   ; number of ticks to wait for
+>    add      ClockLow, ax
+>    adc      ClockHigh, 0
+>    cmp      ClockHigh, 24
+>    jb       WFT1
+>    mov      ClockHigh, 0
+>
+> WFT0:
+>    xor      ax, ax             ; wait for a new day
+>    int      1Ah
+>    cmp      cx, 0
+>    jne      WFT0
+>
+> WFT1:
+>    xor      ax, ax
+>    int      1Ah
+>    cmp      cx, ClockHigh
+>    jb       WFT1
+>    ja       WFT3
+>
+> WFT2:
+>    cmp      dx, ClockLow
+>    jb       WFT1
+>
+> WFT3:
+>    pop      dx
+>    pop      cx
+>    pop      bp
+>
+>    ret
+>
+> endproc WaitForTicks
+>
+> END
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpinit.c in otkscsi and sgiscsi Page 1
+
+
+69c69
+< #ifdef MSDOS
+---
+> #if defined(MSDOS) || defined(SGI)
+109c109
+< #ifdef MSDOS
+---
+> #if defined(MSDOS) || defined(SGI)
+128c128
+< #ifdef MSDOS
+---
+> #if defined(MSDOS) || defined(SGI)
+130a131,133
+> #ifdef DEBUG
+>     printf("ConfigDir: %s, Drive: %s, Path: %s, Fname: %s, Fext: %s\n", ConfigDir, Drive, Path, Fname, Fext);
+> #endif
+144a148,149
+>     DP_SwapShorts(dp);
+>
+198c203,205
+<
+---
+> #ifdef DEBUG
+>     printf("test 1\n");
+> #endif
+204a212,214
+> #ifdef DEBUG
+>     printf("test 2\n");
+> #endif
+272c282
+< #ifdef MSDOS
+---
+> #if defined(MSDOS) || defined(SGI)
+278a289,291
+> #endif
+> #ifdef DEBUG
+> 	    printf("Trying file: %s\n", FilmFile);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpinqu.c in otkscsi and sgiscsi Page 1
+
+
+33a34
+> void DP_sleep(int);
+48c49
+<     int   i ;
+---
+>     int   i,j;
+193c194,197
+<             DP_ERRORCLASS(dp) = sc_film_name( i, DP_FILM_NAME( dp, i )) ;
+---
+> #ifdef DEBUG2
+> 	    printf("inquire film %d: %s\n", i, DP_FILM_NAME(dp,i));
+> #endif
+>             DP_ERRORCLASS(dp) = sc_film_name( i, DP_FILM_NAME(dp,i));
+228a233,235
+> #ifdef DEBUG
+> 		printf("Inquire a/r of film %d.\n", i);
+> #endif
+234a242,244
+> #ifdef DEBUG
+> 		printf("Do not inquire a/r of film %d.\n", i);
+> #endif
+348a359,365
+>
+> void DP_sleep(secs)
+> int secs;
+> {
+>   DP_Sleep(secs);
+> }
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdprerr.c in otkscsi and sgiscsi Page 1
+
+
+37a38
+> #include "errno.h"
+154c155,157
+<
+---
+>     unsigned char *p;
+>     int i;
+>
+162a166,173
+> #ifdef DEBUG
+>     printf("extended_sense: ");
+>     p = (unsigned char *) extended_sense;
+>     for(i=0; i<10; i++) printf("%2.2X ", (int) p[i]);
+>     printf("\n");
+>     printf("errno: %d\n", errno);
+> #endif
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 1
+
+
+1,7c1,3
+< /*  DEC/CMS REPLACEMENT HISTORY, Element SCDPPS2.C */
+< /*  *4     3-MAY-1991 12:13:05 BROGNA "" */
+< /*  *3     9-APR-1991 10:48:12 BIELEFELD "SCSI supports multiple non-consecutive addressed palettes" */
+< /*  *2     1-APR-1991 18:14:06 BROGNA "Toolkit enhancments" */
+< /*  *1    26-MAR-1991 11:38:53 BROGNA "PS2 SCSI support" */
+< /*  DEC/CMS REPLACEMENT HISTORY, Element SCDPPS2.C */
+< /*  scdpps2.c
+---
+> /*
+> 	SCSI interface for SGI
+> */
+9,17c5,9
+< Copyright(c) 1988, 1989, 1990, 1991 Polaroid Corporation
+< 	
+< 	J. Bielefeld	2/18/91
+< 		4/4/91	- Added the ability to search for and run multiple palettes.
+<
+<     Low level scsi functions for the IBM SCSI interface board running
+<     on a PS-2.
+<     The function here is 'glue' for connecting the Digital Palette SCSI
+<     Toolkit to the host SCSI driver.
+---
+> #include <stdio.h>
+> #include <signal.h>
+> #include <sys/types.h>
+> #include <fcntl.h>
+> #include <malloc.h>
+19,38c11,12
+<     The functions which are required here are:
+<     DP_scsi_driver()              function which performs all SCSI IO
+<     DP_scsi_adprst()              function which resets the SCSI adapter
+<                                   during a hardware hang-up
+<     DP_scsi_reset()               function which resets the SCSI adapter
+<                                   and SCSI devices
+<     DP_scsi_setup()               called to initialize the host SCSI driver
+<     DP_host_retrieve_scsi_error() function which sets host side SCSI errors
+<     DP_scsi_allocate()            called to allocate a SCSI device
+<     DP_scsi_deallocate()          called to dealocate a SCSI device
+<
+<     DP_scsi_driver()  is called to perform a SCSI command
+<     This routine will run through all of the scsi phases. After the
+<     SCSI command has been completed, the STATUS byte is checked to
+<     see if the status is CHECK CONDITION.  If so, then a GET EXTENDED
+<     SENSE command must be issued and the extended sense bytes must be
+<     filled in.
+<
+<     Refer to scsiio.doc for a detailed description of how to build the
+<     low level scsi io routines for a new scsi interface.
+---
+> #include "dslib.h"
+> #include <stdarg.h>
+40,71d13
+<
+<     entry:
+<         char *cdb             pointer to the Command Description Block ( CDB )
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 2
+
+
+<
+<         int scsi_id           scsi id of the target device ( 0 to 7 )
+<
+<         char *data_ptr        pointer to an array where data is written/read
+<                               during the SCSI data phase
+<
+<         int data_size         size of the data array which is transfered
+<                               during the SCSI data phase
+<
+<         char *extended_sense  pointer to the extended sense buffer.  This
+<                               buffer must be filled with SENSE_SIZE bytes
+<                               from the Get Extended Sense command if the
+<                               command returns a CHECK CONDITION status.
+<
+<         int dir               direction of the data transfer:
+<                               SCSI_READ   target to initiator
+<                               SCSI_WRITE  initiator to target
+<                               SCSI_NODATA no data phase associated
+<                                           with this cmd
+<
+<     exit:
+<         SCSI_COMMAND_OK       all went well
+<         EXTSENSE_VALID        A CHECK CONDITION status was returned, a
+<                               Get Extended Sense command was issued, and
+<                               the extended_sense array contains valid data
+<         (any other value)     a host driver specific error occured.
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 3
+
+
+
+< ============================================================================*/
+<
+77a20,21
+> #include <errno.h>
+>
+81d24
+< #include <dos.h>
+83,92d25
+< #define READ	    0x8000
+< #define ERRSTATUS   0x4000
+< #define RETRY       0x2000
+< #define SSBIT       0x0400
+< #define BYPASS      0x0200
+<
+< #define SNDOTHRCMD  0x249F
+< #define REQSENSE    0x1C88
+< #define RESET       0x0400
+<
+95,100d27
+< #define DEVICE_ALLOCATED 0x20
+< #define IBM_FXD_DISK     0x08
+< #define REMOVABLE_MEDIA  0X04
+< #define DEFECTIVE_DRIVE  0X02
+< #define DEV_NOT_POWERED  0X01
+<
+105,106d31
+< #define DO_UNTIL_BREAK for(;;)
+<
+115,119c40,45
+< /*----------------------------------------------------------------------
+<     this structure defines all of the parameters which are required to
+<     pass to the IBM SCSI driver which is accessible via int0x4B.  This
+<     structure is filled in for each scsi transfer.
+< -----------------------------------------------------------------------*/
+---
+> typedef struct
+> {
+>   unsigned char SCSI_key;
+>   unsigned char Device_Count;
+>   int Palette;
+> } DEV_LOOKUP;
+121,157d46
+< typedef struct {
+<     int  cmd;               /* send other SCSI command */
+<     int  enable;            /* Enable word */
+<     int  cmdlen;            /* SCSI command length */
+<     int  reserved;          /* reserved for IBM */
+<     long bufAddr;           /* System buffer address */
+<     long bufCount;          /* System buffer byte count */
+<     long tsbAddr;           /* Terminate status block address */
+<     long chain;             /* Optional SCB chain address */
+<     char scsiCmd[6];        /* SCSI commands */
+< } PS2_SCB;
+<
+< static PS2_SCB scb_block;
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 4
+
+
+< static PS2_SCB *ps2_SCB = &scb_block;
+<
+< typedef struct {
+<     int  SCBstatus;         /* SCB Status */
+<     int  retryCount;        /* Retry count */
+<     long residualByteCount; /* Residual Byte Count */
+<     long residualBufAddr;   /* Residual Byte Address */
+<     int  statusLen;         /* Device dependent status length */
+<     int  cmdDeviceStat;     /* Command device status */
+<     int  cmdDeviceErr;      /* Command device error code */
+<     int  reserved;
+<     int  cacheInfo;         /* Cache information word */
+<     long lastSCBaddr;		/* Last SCB address processed */
+< } PS2_TSB;
+<
+< static PS2_TSB tsb_block;
+< static PS2_TSB *ps2_TSB = &tsb_block;
+<
+< typedef struct {			/* lookup table to convert the scsi_id or */
+< 	unsigned char SCSI_key;	/* or logical address and find the physical */
+< 	unsigned char Device_Count; /* device address */
+< 	int           Palette;
+< 	} DEV_LOOKUP;
+<
+160,162c49,52
+< static int SCSI_devcnt;
+< static int SCSI_id;
+< static int done_once;
+---
+> static int SCSI_id=1;
+> static struct dsreq *dsp=NULL;
+> static int last_dev_count = -1;
+> static int done_once = NO;
+169d58
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 5
+
+
+
+173,179d61
+< /* NOTE:
+< 	The DP_scsi_driver() routine calls DP_scsi_allocate() and
+< DP_scsi_deallocate() routines to in effect mount and unmount the SCSI
+< device. These routines may be removed to increase the SCSI driver
+< efficiency. If they are removed, they should be placed elseware in the
+< application. Never should the application write to a SCSI device without
+< allocating and exit to DOS without deallocating.
+184a67,71
+> {
+>   int st,i;
+>   int dev_cnt;
+>   char devfname[20];
+>   char *local_data_ptr;
+186,191c73,75
+< 	{
+<     int X;
+<     union  REGS  regs;
+<     struct SREGS sregs;
+<     char   far   *farptr;
+<     int          dev_cnt, error, status;
+---
+> #ifdef DEBUG
+>   printf("scsi_id: %d, command: %d, data_size: %d\n", scsi_id, (int) cdb[0], data_size);
+> #endif
+192a77,91
+>   if( (((unsigned long)data_ptr) & 3) != 0)
+>   {
+> #ifdef DEBUG
+>     printf("data_ptr not aligned: %8.8x. size: %d\n", (unsigned long) data_ptr, data_size);
+> #endif
+>     local_data_ptr = malloc(data_size);
+>     if(dir != SCSI_READ)
+>     {
+>       for(i=0; i<data_size; i++) local_data_ptr[i] = data_ptr[i];
+>     }
+>   }
+>   else
+>   {
+>     local_data_ptr = data_ptr;
+>   }
+194,199c93,99
+< 	/* --- check the scsi_id for a valid palette address --- */
+< 	if (SCSI_addr[scsi_id].Palette != YES)
+< 		return(0x0F);
+< 	
+< 	/* --- convert SCSI device ID to device count --- */
+< 	dev_cnt = SCSI_addr[scsi_id].Device_Count;
+---
+>   if(SCSI_addr[scsi_id].Palette != YES)
+>   {
+> #ifdef DEBUG
+>     printf("DP_scsi_driver return 1\n");
+> #endif
+>     return(0x0f);
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 6
+
+
+>   }
+201,203c101
+< 	/* --- allocate the SCSI device --- */
+< 	if ((status = DP_scsi_allocate(dev_cnt)) > 0)
+< 		return(status);			/* something went wrong */
+---
+>   dev_cnt = SCSI_addr[scsi_id].Device_Count;
+205,214c103,120
+< 	DO_UNTIL_BREAK
+< 		{
+< 		/* --- set up the enable bits --- */
+< 		if (dir == SCSI_READ)
+< 			ps2_SCB->enable = READ | ERRSTATUS | RETRY | SSBIT | BYPASS;
+< 		else
+< 			ps2_SCB->enable = ERRSTATUS | RETRY | SSBIT | BYPASS;
+<
+< 		/* --- set up the SCSI command --- */
+< 		ps2_SCB->cmd     = SNDOTHRCMD;
+---
+>   if(dev_cnt != last_dev_count)
+>   {
+>     if(last_dev_count != -1)
+>     {
+>       dsclose(dsp);
+>       dsp = NULL;
+>     }
+>     sprintf(devfname, "/dev/scsi/sc0d%dl0", dev_cnt);
+>     dsp = dsopen(devfname, O_RDWR);
+>     last_dev_count = dev_cnt;
+>     if(dsp == NULL)
+>     {
+> #ifdef DEBUG
+>       printf("DP_scsi_driver return 2\n");
+> #endif
+>       return;
+>     }
+>   }
+216,218c122,124
+< 		/* --- set up the TSB pointer --- */
+< 		ps2_SCB->tsbAddr = ((long)ps2_TSB & 0xFFFF)+
+< 			(((long)ps2_TSB >>12) & 0xFFFF0);
+---
+>   /*
+> 	Insert the SCSI command.
+>   */
+220,229c126,127
+< 		/* --- load the SCSI CDB size --- */
+< 		ps2_SCB->cmdlen  = CDB_SIZE;
+<
+< 		/* --- move the CDB bytes into the IBM SCB block --- */
+< 		for (X = 0; X < CDB_SIZE; X++)
+< 			ps2_SCB->scsiCmd[X] = *cdb++;
+<
+< 		/* --- load the data buffer address --- */
+< 		ps2_SCB->bufAddr = ((long)data_ptr & 0xFFFF)+
+< 			(((long)data_ptr >>12) & 0xFFFF0);
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 7
+
+
+---
+>   CMDLEN(dsp) = 6;
+>   for(i=0; i<6; i++) CMDBUF(dsp)[i] = cdb[i];
+231,232c129,131
+< 		/* --- load the size of the data buffer --- */
+< 		ps2_SCB->bufCount = (long)data_size;
+---
+>   /*
+> 	Execute the command:
+>   */
+234,257c133,182
+< 		/* --- send command SCB --- */
+< 		regs.h.ah = 0x80;                /* BIOS call to SCSI devices */
+< 		regs.h.al = 0x04;                /* Send Device SCB */
+< 		sregs.es  = FP_SEG(ps2_SCB);     /* set up SCB address */
+< 		regs.x.bx = FP_OFF(ps2_SCB);
+< 		regs.h.cl = 0x01;                /* SCB type indicator */
+< 		regs.x.dx = SCSI_addr[dev_cnt].SCSI_key;   /* load device key */
+< 		int86x(0x4b,&regs,&regs,&sregs); /* do it!!! */
+< //		bios_err(regs.x.ax);
+< 		
+< 		/* --- check to see if we obtained any error on the SCSI bus */
+< 		/* the cflag (carry flag) == 0 no errors --- */
+< 		if (regs.x.cflag == 0)
+< 			{
+< 			status = SCSI_COMMAND_OK; /* no errors */
+< 			break;
+< 			}
+< 		
+< 		/* --- check for what BIOS error we got --- */
+< 		if (regs.x.ax == 0)
+< 			{
+< 			status = SCSI_COMMAND_OK;
+< 			break;
+< 			}
+---
+>   if(dir == SCSI_READ)
+>   {
+>     filldsreq(dsp, local_data_ptr, data_size, DSRQ_READ);
+>   }
+>   else
+>   {
+>     filldsreq(dsp, local_data_ptr, data_size, DSRQ_WRITE);
+>   }
+>   st = doscsireq(getfd(dsp), dsp);
+>   if(data_ptr != local_data_ptr)
+>   {
+>     if(dir == SCSI_READ)
+>     {
+>       for(i=0; i<data_size; i++) data_ptr[i] = local_data_ptr[i];
+>     }
+>     free(local_data_ptr);
+>   }
+>   if(st == 0)
+>   {
+> #ifdef DEBUG
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 8
+
+
+>     printf("doscsireq OK.\n");
+> #endif
+>     return(SCSI_COMMAND_OK);
+>   }
+>   else
+>   {
+>     /*
+> 	Get extended sense:
+>     */
+> #ifdef DEBUG
+>     printf("doscsireq BAD. st = %d\n", st);
+> #endif
+>     if(st == 255)
+>     {
+>       return (-1);
+>     }
+>     st = requestsense03(dsp, extended_sense, SENSE_SIZE, 0);
+>     if(st == 0)
+>     {
+> #ifdef DEBUG
+>       printf("Got extended sense: ");
+>       for(i=0; i<10; i++)
+>       printf("%2.2x ", extended_sense[i]);
+>       printf("\n");
+> #endif
+>       return(EXTSENSE_VALID);
+>     }
+>   }
+>   return(st);
+> } /* end DP_scsi_driver() */
+259,321d183
+< 		/* --- if the request ended in error and interrupt status
+<                indicates that command completed in failure then
+<                read the Termination Status Block --- */
+< 		if ((regs.h.ah == 0x06) & ((regs.h.al & 0x0F) == 0x0C))
+< 			{
+< 			/* --- Check the Device Status Code in the
+<                    Termination Status Block for a Check Condition --- */
+< 			if ((ps2_TSB->cmdDeviceStat & 0x000F) == 0x0002)
+< 				{
+< 				/* --- if a Check Condition is valid then request
+< 					   extended sense from the device --- */
+< 				for (X = 0; X < CDB_SIZE; X++)
+< 					ps2_SCB->scsiCmd[X] = 0;
+< 				ps2_SCB->enable   = READ | ERRSTATUS | RETRY | SSBIT | BYPASS;
+< 				ps2_SCB->cmd      = REQSENSE;
+< 				ps2_SCB->cmdlen   = 0;
+< 				ps2_SCB->reserved = 0;
+< 				ps2_SCB->chain    = 0;
+< 				ps2_SCB->tsbAddr  = ((long)ps2_TSB & 0xFFFF) +
+<                                     (((long)ps2_TSB >>12) & 0xFFFF0);
+< 				ps2_SCB->bufAddr  = ((long)extended_sense & 0xFFFF) +
+<                                     (((long)extended_sense >>12) & 0xFFFF0);
+< 				ps2_SCB->bufCount = (long)SENSE_SIZE;
+< 			
+< 				regs.h.ah         = 0x80;   /* BIOS call to SCSI Device */
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 9
+
+
+< 				regs.h.al         = 0x04;   /* Send device SCB */
+< 				sregs.es          = FP_SEG(ps2_SCB);
+< 				regs.x.bx         = FP_OFF(ps2_SCB);
+< 				regs.h.cl         = 0x00;   /* SCB type indicator */
+< 				regs.x.dx         = SCSI_addr[dev_cnt].SCSI_key; /* dev key */
+< 				int86x(0x4B,&regs,&regs,&sregs);
+< //				bios_err(regs.x.ax);
+< 			
+< 				/* --- check for errors --- */
+< 				if (regs.x.cflag == 0)
+< 					{
+< 					status = EXTSENSE_VALID;
+< 					break;
+< 					}
+< 				else
+< 					{
+< 					if (regs.h.al == 0)
+< 						{
+< 						status = EXTSENSE_VALID;
+< 						break;
+< 						}
+< 					DP_scsi_adptrst(dev_cnt);
+< 					status = (int)regs.h.ah;
+< 					break;
+< 					}
+< 				}
+< 			}
+< 		else status = (int)regs.h.ah; /* return the error */
+< 		break;
+< 		} /* end DO_UNTIL_BREAK */
+< 	
+< 	if ((error = DP_scsi_deallocate(dev_cnt)) > 0)	/* dealocate the device */
+< 		return (error);
+< 	return (status);
+< 	
+< 	} /* end DP_scsi_driver() */
+<
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 10
+
+
+
+331,345d192
+< union REGS regs;
+<
+< printf ("---Adapter Reset---\n");
+< /* --- reset the SCSI adapter --- */
+< regs.h.ah = 0x80;                /* SCSI BIOS call */
+< regs.h.al = 0x06;                /* Function = Reset Adapter */
+< regs.x.dx = SCSI_addr[dev_cnt].SCSI_key;   /* Device Key */
+< int86(0x4B, &regs, &regs);       /* SCSI interrupt */
+< // bios_err(regs.x.ax);
+<
+< /* --- did the reset succeed --- */
+< if (regs.x.cflag != 0)
+< 	if (regs.h.ah > 0x00)
+< 		printf ("\n\n SCSI ADAPTER FAILED TO RESET\n\n");
+< return;
+348d194
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 11
+
+
+
+354,356c200,202
+<    {
+<    return;
+<    }
+---
+> {
+>   return;
+> }
+358,383d203
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 12
+
+
+
+< /*--------------------------------------------------------------------------
+<     Here we have the error strings:
+< ---------------------------------------------------------------------------*/
+<
+< static struct { int errno ; int err_class ; char *errstring ; } err_msg[] = {
+<     { 0x01, DPTOOLKITERR, "Invalid BIOS function or parameter" },
+<     { 0x02, DPTOOLKITERR, "Device not allocated" },
+<     { 0x03, DPTOOLKITERR, "Device already allocated" },
+<     { 0x04, DPTOOLKITERR, "Function not allowed" },
+<     { 0x05, HARDWERR,     "Adapter unusable, adapter reset required" },
+<     { 0x06, HARDWERR,     "Request ended in error" },
+<     { 0x07, HARDWERR,     "Adapter reset failed" },
+<     { 0x08, HARDWERR,     "Adapter reconfiguration failed after reset" },
+<     { 0x09, HARDWERR,     "Adapter time-out error" },
+<     { 0x0A, DPTOOLKITERR, "Adapter in use" },
+<     { 0x0B, HARDWERR,     "Reset adapter before next command" },
+<     { 0x0C, DPTOOLKITERR, "Request command complete status" },
+<     { 0x0D, HARDWERR,     "SCSI adapter not attached"},
+<     { 0x0E, HARDWERR,     "No SCSI printer attached"},
+< 	{ 0x0F, DPTOOLKITERR, "Device accessed is not a palette"},
+<
+<     { 0x00, DPTOOLKITERR, "Unknown SCSI Driver Error" }  /* end of list */
+< } ;
+<
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 13
+
+
+
+402,414c222,228
+<     int X ;
+< 	
+<     for ( X = 0 ; err_msg[X].errno ; X++ )
+<         {
+<         if ( err_msg[X].errno == error )
+<             break ;
+<         }
+<
+<     DP_ERRORNUMBER( dp ) = err_msg[X].errno ;
+<     strcpy( DP_ERRORMESSAGE( dp ), err_msg[X].errstring ) ;
+<     DP_ERRORCLASS( dp ) = err_msg[X].err_class ;
+<
+<     return( DP_ERRORCLASS( dp )) ;
+---
+>   DP_ERRORNUMBER(dp) = errno;
+> #ifdef DEBUG
+>   printf("\nDP_host_retrieve_scsi_error: %d %d %s\n", error, errno, strerror(errno));
+> #endif
+>   strcpy(DP_ERRORMESSAGE(dp), strerror(errno));
+>   DP_ERRORCLASS(dp) = 87;
+>   return( DP_ERRORCLASS( dp )) ;
+417d230
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 14
+
+
+
+447c260
+< #define HOST_SCSI_NAME  "IBM PS/2 SCSI"
+---
+> #define HOST_SCSI_NAME  "SGI SCSI"
+454,458c267,269
+< union REGS regs;
+< struct SREGS sregs;
+< unsigned char _far *scsi;
+< int x,dev_count;
+< int error;
+---
+>   char devfname[20];
+>   int dev_count;
+>   int st;
+460,541c271
+<     *driver_name = HOST_SCSI_NAME ;
+<
+< 	if (done_once == NO)
+< 		{
+< 		done_once = YES;
+< 		scsi = (unsigned char *)0x0047B; /* check the hardware */
+<         if ((*scsi & 0x02) == 0)
+<             {
+< //          printf ("---> SCSI card not installed <---\n");
+<             DP_ERRORCLASS(dp) = HARDWERR;
+< 		    return(0x0D);	/* oops! SCSI card not installed */
+<             }
+<         else  /* see how meny printer devices are out there? */
+<             {
+<             regs.h.ah = 0x80;       /* BIOS call to SCSI device */
+<             regs.h.al = 0x00;       /* Function = Get device count */
+<             regs.x.dx = 0x02;       /* Device   = Printer (2) */
+<             int86(0x4B,&regs,&regs); /* SCSI interrupt */
+< //          bios_err(regs.x.ax);
+< 		
+<             if (regs.x.cflag != 0)
+<                 {
+< //              printf ("---> No printer attached to SCSI <---\n");
+<                 DP_ERRORCLASS(dp) = HARDWERR;
+<                 return(0x0E); /* No printer attached to SCSI */
+<                 }
+<             }
+< 		
+<         if ((SCSI_devcnt = (int)regs.h.cl) > 0)	/* store the device count */
+< 		    {
+< 			/* set all device addresses as non-palette until otherwyse */
+< 			for (x = 0; x < 8; x++)
+< 				SCSI_addr[x].Palette = NO;
+< 			SCSI_id = 1;	/* start mapping with scsi_id == 1 */
+< 		    for (dev_count = 1; dev_count <= SCSI_devcnt; dev_count++)
+< 				{
+< 				/* need to check each printer device and make shure they
+< 				   are digital palettes */
+< 				if ((error = DP_scsi_allocate(dev_count)) != 0)
+< 					{
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 15
+
+
+< 					DP_scsi_deallocate(dev_count);
+< 					return(error);
+< 					}
+< 				ps2_SCB->enable   = READ|ERRSTATUS|RETRY|SSBIT|BYPASS;
+< 				ps2_SCB->cmd      = SNDOTHRCMD;
+< 				ps2_SCB->tsbAddr  = ((long)ps2_TSB & 0xFFFF) +
+< 					                (((long)ps2_TSB >> 12) & 0xFFFF0);
+< 				ps2_SCB->cmdlen   = CDB_SIZE;
+< 				for (x = 0; x < CDB_SIZE; x++)
+< 					ps2_SCB->scsiCmd[x] = INQ_CDB[x];
+< 				inqdptr           = &inq_data[dev_count][0];
+< 				ps2_SCB->bufAddr  = (((long)inqdptr) & 0xFFFF) +
+< 					                (((long)inqdptr >> 12) & 0xFFFF0);
+< 				ps2_SCB->bufCount = (long)INQUIRY_BUFFER_SIZE;
+< 				
+< 				regs.h.ah = 0x80;		/* BIOS call to SCSI device */
+< 				regs.h.al = 0x04;		/* Function: Send Device SCB */
+< 				sregs.es  = FP_SEG(ps2_SCB);
+< 				regs.x.bx = FP_OFF(ps2_SCB);
+< 				regs.h.cl = 0x01;		/* SCB type indicator */
+< 				regs.x.dx = SCSI_addr[dev_count].SCSI_key;
+< 				int86x(0x4B, &regs, &regs, &sregs);	/* do it!!! */
+< //				bios_err(regs.x.ax);
+< 				
+< 				/* check for errors */
+< 				if (regs.x.cflag == 0)
+< 					if (!(strcmp(&inq_data[dev_count][INQ_IDENTIFICATION],
+< 						IDENT_STRING)))
+< 							{
+< 							/* we found a palette so add it to the table */
+< 							SCSI_addr[SCSI_id].Device_Count = dev_count;
+< 							SCSI_addr[SCSI_id].Palette      = YES;
+< 							/* only bump the count if a valid palette */
+< 							SCSI_id++;
+< 							}
+< 				DP_scsi_deallocate(dev_count);
+< 			    } /* end for() */
+< 		    } /* end if() */
+< 		} /* end if(done_once == NO) */
+< 	
+< return(NOERROR);
+< }
+---
+>   *driver_name = HOST_SCSI_NAME;
+543,546c273,276
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 16
+
+
+
+< /*--------------------------------------------------------------------
+< Need to allocate a SCSI device prior to access.
+< ---------------------------------------------------------------------*/
+---
+>   if(done_once == NO)
+>   {
+>     done_once = YES;
+>     for(dev_count = 0; dev_count<8; dev_count++) SCSI_addr[dev_count].Palette = NO;
+548,550c278
+< int DP_scsi_allocate(dev_cnt)
+<     int	dev_cnt;
+<
+---
+>     for(dev_count = 1; dev_count<8; dev_count++)
+552c280,296
+<     union REGS regs;
+---
+> #ifdef DEBUG
+>       printf("Checking SCSI device %d\n", dev_count);
+> #endif
+>       sprintf(devfname, "/dev/scsi/sc0d%dl0", dev_count);
+>       if(dsp != NULL)
+>       {
+> 	dsclose(dsp);
+> 	dsp = NULL;
+>       }
+>       dsp = dsopen(devfname, O_RDWR);
+>       if(dsp == NULL)
+>       {
+> #ifdef DEBUG
+> 	printf(" - could not open file.\n");
+> #endif
+> 	continue;
+>       }
+554,568c298,308
+<     regs.h.ah	= 0x80;		    /* BIOS call to SCSI device */
+<     regs.h.al	= 0x02;	        /* Function = Allocate device */
+<     regs.h.dh	= dev_cnt;      /* open device = next available device */
+<     regs.h.dl   = 0x02;	        /* Device   = Printer */
+<     int86(0x4B,&regs,&regs);    /* SCSI interrupt */
+< //  bios_err(regs.x.ax);
+<     if (regs.x.cflag != 0)
+<         return ((int)regs.h.ah);
+<     else
+<         {
+<         SCSI_addr[dev_cnt].SCSI_key = regs.x.dx; /* save the new logical
+< 			                             device key under the scsi_id */
+<         return (NOERROR);
+<         }
+<     }
+---
+>       inqdptr = &inq_data[dev_count][0];
+>       st = inquiry12(dsp, inqdptr, INQUIRY_BUFFER_SIZE, 0);
+>       if(st != 0)
+>       {
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 17
+
+
+> #ifdef DEBUG
+> 	printf(" - could not perform inquiry. st = %d\n", st);
+> #endif
+> 	dsclose(dsp);
+> 	dsp = NULL;
+> 	continue;
+>       }
+570,573c310
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 18
+
+
+
+< /*--------------------------------------------------------------------
+<  Need to deallocate a SCSI device prior to exiting to DOS.
+< ---------------------------------------------------------------------*/
+---
+>       /* Compare the strings: */
+575,576c312,330
+< int DP_scsi_deallocate(dev_cnt)
+< 	int dev_cnt;
+---
+>       if(!strcmp(&inqdptr[INQ_IDENTIFICATION], IDENT_STRING))
+>       {
+> 	SCSI_addr[SCSI_id].Device_Count = dev_count;
+> 	SCSI_addr[SCSI_id].Palette = YES;
+> 	SCSI_id++;
+> #ifdef DEBUG
+> 	printf("OK - This is a Digital Palette.\n");
+> #endif
+>       }
+>       else
+>       {
+> #ifdef DEBUG
+> 	printf(" - id mismatch: %s %s\n", &inqdptr[INQ_IDENTIFICATION], IDENT_STRING);
+> #endif
+>       }
+>       dsclose(dsp);
+>       dsp = NULL;
+>     } /* dev_count loop */
+>   } /* done_once check */
+578,662c332,336
+<     {
+<     union REGS regs;
+<
+<     regs.h.ah = 0x80;               /* BIOS call to SCSI device */
+<     regs.h.al = 0x03;               /* Function: de-allocate device */
+<     regs.x.dx = SCSI_addr[dev_cnt].SCSI_key; /* deallocate device SCSI_key */
+<     SCSI_addr[dev_cnt].SCSI_key = (int)NONE;  /* clear the old ID */
+<     int86(0x4B, &regs, &regs);      /* SCSI Interrupt */
+< //  bios_err(regs.x.ax);
+< 	
+<     if (regs.x.cflag != 0)
+<         return ((int)regs.h.al);
+<     return (NOERROR);
+<     }
+<
+<
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 19
+
+
+
+< /*-------------------------------------------------------------------------
+<  BIOS error checking routine:
+<      To use this routine for debugging, just uncomment (//) the line of code
+<      following either an int86() or int86x() SCSI BIOS call.
+< --------------------------------------------------------------------------*/
+<
+< int bios_err(err)
+<     int err;
+<     {
+<     int ah;
+<     int al;
+<
+<     printf ("AX = 0x%x\n\n",err);
+< 	
+<     ah = err & 0xff00;
+<     al = err & 0x00ff;
+<     switch (ah)
+<         {
+<         case    0x0000:
+<             printf ("AH - No error.\n\n");
+<             break;
+<         case    0x0100:
+<             printf ("AH - Invalid BIOS function or parameter.\n\n");
+<             break;
+<         case    0x0200:
+<             printf ("AH - Device not allocated.\n\n");
+<             break;
+<         case    0x0300:
+<             printf ("AH - Device already allocated.\n\n");
+<             break;
+<         case    0x0400:
+<             printf ("AH - Function not allowed.\n\n");
+<             break;
+<         case    0x0500:
+<             printf ("AH - Adapter unusable, adapter reset required.\n\n");
+<             break;
+<         case    0x0600:
+<             printf ("AH - Request ended in error (see AL).\n");
+<             break;
+<         case    0x0700:
+<             printf ("AH - Adapter reset failed (see AL).\n");
+<             break;
+<         case    0x0800:
+<             printf ("AH - Adapter reconfiguration failed after reset.\n\n");
+<             break;
+<         case    0x0900:
+<             printf ("AH - Adapter time out error.\n\n");
+<             break;
+<         case    0x0A00:
+<             printf ("AH - Adapter in use.\n\n");
+<             break;
+<         }
+< 	
+<     if (al & 0x80)
+<         printf ("AL - Reset adapter before attempting next command.\n\n");
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsgi.c in otkscsi and sgiscsi Page 20
+
+
+<     if (al & 0x40)
+<         {
+<         printf ("AL - Request Command Complete Status or\n");
+<         printf ("     Termination Status Block\n");
+<         printf ("     to get additional error status data\n\n");
+<         }
+<     if (al & 0x20)
+<         printf ("AL - Reserved\n\n");
+<     if (al & 0x10)
+<         printf ("AL - Bits 3 to 0 contain interrupt ID of ISR: %x\n\n",
+<             al & 0x0F);
+< 	
+<     return(NOERROR);
+<     } /* end bios_err() */
+---
+> #ifdef DEBUG
+>   printf("DP_scsi_setup: SCSI_id: %d\n", SCSI_id);
+> #endif
+>   return(NOERROR);
+> } /* end of DP_scsi_setup */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./scdpsimg.c in otkscsi and sgiscsi Page 1
+
+
+58a59,60
+>     {
+> 	fprintf(stderr, "Hm - buffer problem.\n");
+59a62
+>     }
+70a74,75
+>     {
+> 	fprintf(stderr, "hm - bad print - %d\n", DP_ERRORCLASS(dp));
+71a77
+>     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctkread.me in otkscsi and sgiscsi Page 1
+
+
+1,144c1,144
+< #  DEC/CMS REPLACEMENT HISTORY, Element SCTKREAD.ME
+< #  *4    22-MAY-1991 15:16:31 BROGNA "Toolkit Version 3.0"
+< #  *3     3-MAY-1991 12:14:08 BROGNA ""
+< #  *2    25-MAR-1991 16:10:55 BROGNA "PS2 support"
+< #  *1     5-NOV-1990 18:15:21 GRABEL "initial..."
+< #  DEC/CMS REPLACEMENT HISTORY, Element SCTKREAD.ME
+<             Digital Palette SCSI Toolkit Readme
+<
+< This read me file contains information for Version 2.2 of the Digital Palette
+< Toolkit for SCSI.
+<
+<
+< Table of Contents:
+<     Porting the toolkit to a new host system
+<     Version 170 Firmware Bugs
+<     Additional notes on the use of the Servo Mode
+<     How the Toolkit code finds the Palette on SCSI
+<     Compiler and System Notes
+<         Microsoft C on DOS
+<         LightSpeed C on the Macintosh
+<
+< ---- Porting the toolkit to a new host system
+<
+< The Digital Palette Toolkit is provided in two major flavors to drive the
+< Palette over the Centronics parallel port or over the SCSI interface.
+< The application interface to the Toolkit remains the same regardless of the
+< physical interface.  Performance with the SCSI interface will generally
+< be much better than with the Centronics because of the greater transmission
+< data rate available with SCSI.
+<
+< The SCSI Toolkit also contains a low level SCSI driver interface which
+< allows the Toolkit to be ported to a number of host environments.  The
+< Toolkit itself has been written to a subset of the ANSI C specification
+< and contains no assembly language to minimize the pain of porting to
+< a new host system.  A make file has been supplied which is compatible
+< with the Microsoft C MAKE.  Use this as a starting point for building a
+< make for your system.
+<
+< Currently, the SCSI toolkit has been ported to the Macintosh OS, PS/2
+< and PC-DOS.
+<
+< Under PC-DOS, the NCR ADP 31-S SCSI adaptor board is being used. This
+< adaptor is NOT recommended for new designs but is made available if
+< you happen to have one of these adapters.  We have SCSI
+< Toolkits drivers available for some of the more popular SCSI adaptors
+< for the PC as well as the IBM SCSI MicroChannel Adapter for the PS-2.
+< Contact Polaroid for drivers which are currently available.
+<
+< On the Macintosh, the LightSpeed C Version 3.01 compiler is currently
+< supported. Refer to the Compiler notes for more info on building the
+< toolkit using LSC.
+<
+< MPW C support for the Macintosh is in the works.
+<
+< To port to a new system, the low level SCSI driver interface must be
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctkread.me in otkscsi and sgiscsi Page 2
+
+
+< written for the new host.  Refer to scdpmac.c (Macintosh driver),
+< scdpncr.c (DOS NCR driver), scdpfdom.c (DOS Future Domain driver) and
+< scdpps2.c (DOS PS/2 driver) for examples on functions which are
+< required for porting to a new host.
+<
+<
+< ---- How the Toolkit code finds the Palette on SCSI
+<
+< The DP_InitPrinter function in the toolkit will automatically scan
+< all of the SCSI devices to determine the SCSI ID which the Palette is
+< set to.  To provide full compatibility with the Centronics version of
+< the toolkit, the DP_PORT entry of the DP_DATA structure has taken on
+< a double function.  DPALETTE.H contains a definition for DP_SCSIID_OFFSET.
+<
+< DP_InitPrinter():
+< 	input parameter port:  This parameter specifies which SCSI ID to
+<                           use in order to locate a Digital Palette.
+<                           Typically the first time this function is called
+<                           this parameter should be zero in order to locate
+<                           the first Digital Palette on the bus.  To find
+<                           additional palettes on the SCSI bus, add 1 to
+<                           the last SCSI ID found and specify this new ID
+<                           as this parameter.  (Note:  Each Digital Palette
+<                           on the bus requires its own DP_DATA structure.)
+<
+<   A convention has been adopted where, if the
+< DP_PORT value is between 0 and (DP_SCSIID_OFFSET - 1), it refers to a
+< Centronics Port number.  If the DP_PORT value is set to a value from
+< DP_SCSIID_OFFSET or above, it refers to a SCSI ID.  If the
+< DP_InitPrinter function is called with a DP_PORT number less than
+< DP_SCSIID_OFFSET, then all SCSI devices will be interogated with an
+< Inquiry command until the Palette is found.  The value returned by
+< the DP_InitFunction will be the Palette's SCSI ID plus
+< DP_SCSIID_OFFSET.  Refer to the comments about DP_SCSIID_OFFSET in
+< dpalette.h.
+<
+<
+< ---- Compiler and System Notes
+<
+< -------- Microsoft C on DOS
+<
+<     The toolkit has been tested on DOS using Microsoft C, Versions 5.1
+<     and 6.0. Building the Toolkit and demo with the Microsoft compiler
+<     is straight forward.  The toolkit directory contains a Microsoft
+<     make compatible make file, sctlkit.ms.  Use this to build the library,
+<     tkscsi.lib.  All of the demos can be built with the scsample.ms make
+<     file in demo directory.
+<
+< -------- LightSpeed C on the Macintosh
+<     The toolkit has been tested on the Macintosh using LSC Version 3.01.
+<     All of the demo's perform their terminal io using stdin and stdout.
+<     These programs assume that they're talking to an 80 character
+<     x 24 line terminal.  Many of them will fill the screen with information
+<     and exit.
+<
+<     LSC provides a nice facility of opening a 'console' window on the
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctkread.me in otkscsi and sgiscsi Page 3
+
+
+<     Mac if a program begins making stdout calls.  One feature on LSC V3.01
+<     which is rather annoying is if you're using the source level debugger,
+<     the 'console' window will be half height.  This lets the debugger run
+<     in the lower half of the screen and the display doesn't need to be
+<     updated.  To disable this feature, the stdio library must be rebuilt.
+<     Edit the config.h file in the LSC library folder to turn _HALF_WINDOW_
+<     off and rebuild the stdio library.
+<
+<     A 'main' front end for LSC, lscmain.c, is provided which provides a
+<     mechanisms to get command line arguments to the demo programs and keep
+<     the 'console' window from disappearing too soon on exit.
+<
+<     A compiler switch in tkhost.h must be changed to enable compilations
+<     on the Macintosh and LSC.  This is the only change which must be made
+<     in the supplied sources to build the demo programs on the Mac.
+<
+<     To build the demo's with LSC, use the sctlkit.ms make file as a starting
+<     point to build a project folder for a toolkit library.
+<
+<     For each demo program, you'll have to build the a project folder and
+<     include the following:
+<
+<     <demo app>
+<     demosup.c
+<     lscmain.c
+<     MacTraps    ( LSC library )
+<     unix        ( LSC library )
+<     stdio       ( LSC library )
+<     Math        ( LSC library )
+<     storage     ( LSC library )
+<     strings     ( LSC library )
+<     <dptoolkit library>
+<
+---
+> #  DEC/CMS REPLACEMENT HISTORY, Element SCTKREAD.ME
+> #  *4    22-MAY-1991 15:16:31 BROGNA "Toolkit Version 3.0"
+> #  *3     3-MAY-1991 12:14:08 BROGNA ""
+> #  *2    25-MAR-1991 16:10:55 BROGNA "PS2 support"
+> #  *1     5-NOV-1990 18:15:21 GRABEL "initial..."
+> #  DEC/CMS REPLACEMENT HISTORY, Element SCTKREAD.ME
+>             Digital Palette SCSI Toolkit Readme
+>
+> This read me file contains information for Version 2.2 of the Digital Palette
+> Toolkit for SCSI.
+>
+>
+> Table of Contents:
+>     Porting the toolkit to a new host system
+>     Version 170 Firmware Bugs
+>     Additional notes on the use of the Servo Mode
+>     How the Toolkit code finds the Palette on SCSI
+>     Compiler and System Notes
+>         Microsoft C on DOS
+>         LightSpeed C on the Macintosh
+>
+> ---- Porting the toolkit to a new host system
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctkread.me in otkscsi and sgiscsi Page 4
+
+
+>
+> The Digital Palette Toolkit is provided in two major flavors to drive the
+> Palette over the Centronics parallel port or over the SCSI interface.
+> The application interface to the Toolkit remains the same regardless of the
+> physical interface.  Performance with the SCSI interface will generally
+> be much better than with the Centronics because of the greater transmission
+> data rate available with SCSI.
+>
+> The SCSI Toolkit also contains a low level SCSI driver interface which
+> allows the Toolkit to be ported to a number of host environments.  The
+> Toolkit itself has been written to a subset of the ANSI C specification
+> and contains no assembly language to minimize the pain of porting to
+> a new host system.  A make file has been supplied which is compatible
+> with the Microsoft C MAKE.  Use this as a starting point for building a
+> make for your system.
+>
+> Currently, the SCSI toolkit has been ported to the Macintosh OS, PS/2
+> and PC-DOS.
+>
+> Under PC-DOS, the NCR ADP 31-S SCSI adaptor board is being used. This
+> adaptor is NOT recommended for new designs but is made available if
+> you happen to have one of these adapters.  We have SCSI
+> Toolkits drivers available for some of the more popular SCSI adaptors
+> for the PC as well as the IBM SCSI MicroChannel Adapter for the PS-2.
+> Contact Polaroid for drivers which are currently available.
+>
+> On the Macintosh, the LightSpeed C Version 3.01 compiler is currently
+> supported. Refer to the Compiler notes for more info on building the
+> toolkit using LSC.
+>
+> MPW C support for the Macintosh is in the works.
+>
+> To port to a new system, the low level SCSI driver interface must be
+> written for the new host.  Refer to scdpmac.c (Macintosh driver),
+> scdpncr.c (DOS NCR driver), scdpfdom.c (DOS Future Domain driver) and
+> scdpps2.c (DOS PS/2 driver) for examples on functions which are
+> required for porting to a new host.
+>
+>
+> ---- How the Toolkit code finds the Palette on SCSI
+>
+> The DP_InitPrinter function in the toolkit will automatically scan
+> all of the SCSI devices to determine the SCSI ID which the Palette is
+> set to.  To provide full compatibility with the Centronics version of
+> the toolkit, the DP_PORT entry of the DP_DATA structure has taken on
+> a double function.  DPALETTE.H contains a definition for DP_SCSIID_OFFSET.
+>
+> DP_InitPrinter():
+> 	input parameter port:  This parameter specifies which SCSI ID to
+>                           use in order to locate a Digital Palette.
+>                           Typically the first time this function is called
+>                           this parameter should be zero in order to locate
+>                           the first Digital Palette on the bus.  To find
+>                           additional palettes on the SCSI bus, add 1 to
+>                           the last SCSI ID found and specify this new ID
+>                           as this parameter.  (Note:  Each Digital Palette
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctkread.me in otkscsi and sgiscsi Page 5
+
+
+>                           on the bus requires its own DP_DATA structure.)
+>
+>   A convention has been adopted where, if the
+> DP_PORT value is between 0 and (DP_SCSIID_OFFSET - 1), it refers to a
+> Centronics Port number.  If the DP_PORT value is set to a value from
+> DP_SCSIID_OFFSET or above, it refers to a SCSI ID.  If the
+> DP_InitPrinter function is called with a DP_PORT number less than
+> DP_SCSIID_OFFSET, then all SCSI devices will be interogated with an
+> Inquiry command until the Palette is found.  The value returned by
+> the DP_InitFunction will be the Palette's SCSI ID plus
+> DP_SCSIID_OFFSET.  Refer to the comments about DP_SCSIID_OFFSET in
+> dpalette.h.
+>
+>
+> ---- Compiler and System Notes
+>
+> -------- Microsoft C on DOS
+>
+>     The toolkit has been tested on DOS using Microsoft C, Versions 5.1
+>     and 6.0. Building the Toolkit and demo with the Microsoft compiler
+>     is straight forward.  The toolkit directory contains a Microsoft
+>     make compatible make file, sctlkit.ms.  Use this to build the library,
+>     tkscsi.lib.  All of the demos can be built with the scsample.ms make
+>     file in demo directory.
+>
+> -------- LightSpeed C on the Macintosh
+>     The toolkit has been tested on the Macintosh using LSC Version 3.01.
+>     All of the demo's perform their terminal io using stdin and stdout.
+>     These programs assume that they're talking to an 80 character
+>     x 24 line terminal.  Many of them will fill the screen with information
+>     and exit.
+>
+>     LSC provides a nice facility of opening a 'console' window on the
+>     Mac if a program begins making stdout calls.  One feature on LSC V3.01
+>     which is rather annoying is if you're using the source level debugger,
+>     the 'console' window will be half height.  This lets the debugger run
+>     in the lower half of the screen and the display doesn't need to be
+>     updated.  To disable this feature, the stdio library must be rebuilt.
+>     Edit the config.h file in the LSC library folder to turn _HALF_WINDOW_
+>     off and rebuild the stdio library.
+>
+>     A 'main' front end for LSC, lscmain.c, is provided which provides a
+>     mechanisms to get command line arguments to the demo programs and keep
+>     the 'console' window from disappearing too soon on exit.
+>
+>     A compiler switch in tkhost.h must be changed to enable compilations
+>     on the Macintosh and LSC.  This is the only change which must be made
+>     in the supplied sources to build the demo programs on the Mac.
+>
+>     To build the demo's with LSC, use the sctlkit.ms make file as a starting
+>     point to build a project folder for a toolkit library.
+>
+>     For each demo program, you'll have to build the a project folder and
+>     include the following:
+>
+>     <demo app>
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctkread.me in otkscsi and sgiscsi Page 6
+
+
+>     demosup.c
+>     lscmain.c
+>     MacTraps    ( LSC library )
+>     unix        ( LSC library )
+>     stdio       ( LSC library )
+>     Math        ( LSC library )
+>     storage     ( LSC library )
+>     strings     ( LSC library )
+>     <dptoolkit library>
+>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctlkit.ms in otkscsi and sgiscsi Page 1
+
+
+1,128c1,128
+< #  DEC/CMS REPLACEMENT HISTORY, Element SCTLKIT.MS
+< #  *6     6-MAY-1991 16:52:47 BROGNA "Future Domain inclusion in Toolkit"
+< #  *5     3-MAY-1991 12:14:15 BROGNA ""
+< #  *4    18-JAN-1991 17:21:27 CAMPBELL_T "Added dpabort.c"
+< #  *3    29-NOV-1990 16:59:21 BROGNA "Version 2.21"
+< #  *2     7-NOV-1990 14:47:29 BROGNA "Added ISV build of CFGdump.exe and CFGmake.exe"
+< #  *1     5-NOV-1990 18:12:44 GRABEL "initial..."
+< #  DEC/CMS REPLACEMENT HISTORY, Element SCTLKIT.MS
+< # SCSI Toolkit -- Prototype Make file
+< #
+< #    Microsoft make utility make file for building the toolkit sources.
+< #    Use this as a starting point to build your own make file.
+< # Memory model support
+< #
+< # Large
+< C_model=L
+< M_model=LARGE
+< #
+< # Medium
+< #C_model=M
+< #M_model=MEDIUM
+< #
+< # Compact
+< #C_model=C
+< #M_model=COMPACT
+< #
+< # Small
+< #C_model=S
+< #M_model=SMALL
+< #
+<
+< dpalette.h     : ..\toolkit\dpalette.h
+<      copy  ..\toolkit\dpalette.h
+<
+< tkhost.h       : ..\toolkit\tkhost.h
+<      copy  ..\toolkit\tkhost.h
+<
+< scdpinit.obj   : scdpinit.c dpalette.h tkhost.h
+<      cl -c -A$(C_model) scdpinit.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< scdpinqu.obj : scdpinqu.c dpalette.h tkhost.h
+<      cl -c -A$(C_model) scdpinqu.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< scdpsprm.obj : scdpsprm.c dpalette.h tkhost.h
+<      cl -c -A$(C_model) scdpsprm.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< scdpsimg.obj : scdpsimg.c dpalette.h tkhost.h
+<      cl -c -A$(C_model) scdpsimg.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< scdpscmd.obj : scdpscmd.c dpalette.h tkhost.h
+<      cl -c -A$(C_model) scdpscmd.c ;
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctlkit.ms in otkscsi and sgiscsi Page 2
+
+
+<      lib tkscsi.lib -+ $@ ;
+<
+< scdprerr.obj : scdprerr.c dpalette.h tkhost.h
+<      cl -c -A$(C_model) scdprerr.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< ### for Macintosh, this file is not used, no need to include it ####
+< pathpars.c   : ..\toolkit\pathpars.c
+<      copy ..\toolkit\pathpars.c
+<
+< pathpars.obj : pathpars.c
+<      cl -c -A$(C_model) PathPars.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< RLEncode.c   : ..\toolkit\RLEncode.c
+<      copy ..\toolkit\RLEncode.c
+<
+< RLEncode.obj : RLEncode.c tkhost.h
+<      cl -c -A$(C_model) RLEncode.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< dptkutil.c   : ..\toolkit\dptkutil.c
+<      copy ..\toolkit\dptkutil.c
+<
+< dptkutil.obj : dptkutil.c dpalette.h
+<      cl -c -A$(C_model) dptkutil.c ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< moddef.inc   : ..\toolkit\moddef.inc
+<      copy ..\toolkit\moddef.inc
+<
+< PolaTime.asm : ..\toolkit\PolaTime.asm
+<      copy ..\toolkit\PolaTime.asm
+<
+< PolaTime.obj : PolaTime.asm moddef.inc
+<      masm -D$(M_model) -MX PolaTime ;
+<      lib tkscsi.lib -+ $@ ;
+<
+< ####
+< #### host and SCSI adaptor specific files:  Choose ONLY one of the following:
+< ####
+<
+< #### For Macintosh users:
+< # scdpmac.obj : dpalette.h scdpmac.c sclowlvl.h
+< #     cl -c -A$(C_model) scdpmac.c ;
+< #     lib tkscsi.lib -+ $@ ;
+<
+< #### For DOS systems using the NCR ADP/S adaptor
+< #scdpncr.obj : scdpncr.c dpalette.h sclowlvl.h
+< #     cl -c -A$(C_model) scdpncr.c ;
+< #     lib tkscsi.lib -+ $@ ;
+<
+< #### For DOS systems using the IBM/PS2 SCSI adaptor
+< #scdpps2.obj : scdpps2.c dpalette.h sclowlvl.h tkinquir.h
+< #     cl -c -A$(C_model) scdpps2.c ;
+< #     lib tkscsi.lib -+ $@ ;
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctlkit.ms in otkscsi and sgiscsi Page 3
+
+
+<
+< #### For DOS systems using the Future Domain SCSI adaptor
+< #### Note: the oemscsi?.obj files are object files which are supplied in
+< ####       the Future Domain developers toolkit.  The following object
+< ####       modules are supplied with the Digital Palette Toolkit:
+< ####            futurdom\oemscsil.obj  Large Memory Model
+< ####            futurdom\oemscsim.obj  Medium Memeory Model
+< ####            futurdom\oemscsi.obj   Small Memory Model
+< ####       The complete Future Domain toolkit must be acquired from Future
+< ####       Domain.
+<
+< FD_OBJ = futurdom\oemscsil.obj
+<
+< scdpfdom.obj : scdpfdom.c sclowlvl.h
+<      cl -c -A$(C_model) scdpfdom.c ;
+<      lib tkscsi.lib -+ $@ ;
+<      lib tkscsi.lib -+ $(FD_OBJ) ;
+---
+> #  DEC/CMS REPLACEMENT HISTORY, Element SCTLKIT.MS
+> #  *6     6-MAY-1991 16:52:47 BROGNA "Future Domain inclusion in Toolkit"
+> #  *5     3-MAY-1991 12:14:15 BROGNA ""
+> #  *4    18-JAN-1991 17:21:27 CAMPBELL_T "Added dpabort.c"
+> #  *3    29-NOV-1990 16:59:21 BROGNA "Version 2.21"
+> #  *2     7-NOV-1990 14:47:29 BROGNA "Added ISV build of CFGdump.exe and CFGmake.exe"
+> #  *1     5-NOV-1990 18:12:44 GRABEL "initial..."
+> #  DEC/CMS REPLACEMENT HISTORY, Element SCTLKIT.MS
+> # SCSI Toolkit -- Prototype Make file
+> #
+> #    Microsoft make utility make file for building the toolkit sources.
+> #    Use this as a starting point to build your own make file.
+> # Memory model support
+> #
+> # Large
+> C_model=L
+> M_model=LARGE
+> #
+> # Medium
+> #C_model=M
+> #M_model=MEDIUM
+> #
+> # Compact
+> #C_model=C
+> #M_model=COMPACT
+> #
+> # Small
+> #C_model=S
+> #M_model=SMALL
+> #
+>
+> dpalette.h     : ..\toolkit\dpalette.h
+>      copy  ..\toolkit\dpalette.h
+>
+> tkhost.h       : ..\toolkit\tkhost.h
+>      copy  ..\toolkit\tkhost.h
+>
+> scdpinit.obj   : scdpinit.c dpalette.h tkhost.h
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctlkit.ms in otkscsi and sgiscsi Page 4
+
+
+>      cl -c -A$(C_model) scdpinit.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> scdpinqu.obj : scdpinqu.c dpalette.h tkhost.h
+>      cl -c -A$(C_model) scdpinqu.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> scdpsprm.obj : scdpsprm.c dpalette.h tkhost.h
+>      cl -c -A$(C_model) scdpsprm.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> scdpsimg.obj : scdpsimg.c dpalette.h tkhost.h
+>      cl -c -A$(C_model) scdpsimg.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> scdpscmd.obj : scdpscmd.c dpalette.h tkhost.h
+>      cl -c -A$(C_model) scdpscmd.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> scdprerr.obj : scdprerr.c dpalette.h tkhost.h
+>      cl -c -A$(C_model) scdprerr.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> ### for Macintosh, this file is not used, no need to include it ####
+> pathpars.c   : ..\toolkit\pathpars.c
+>      copy ..\toolkit\pathpars.c
+>
+> pathpars.obj : pathpars.c
+>      cl -c -A$(C_model) PathPars.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> RLEncode.c   : ..\toolkit\RLEncode.c
+>      copy ..\toolkit\RLEncode.c
+>
+> RLEncode.obj : RLEncode.c tkhost.h
+>      cl -c -A$(C_model) RLEncode.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> dptkutil.c   : ..\toolkit\dptkutil.c
+>      copy ..\toolkit\dptkutil.c
+>
+> dptkutil.obj : dptkutil.c dpalette.h
+>      cl -c -A$(C_model) dptkutil.c ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> moddef.inc   : ..\toolkit\moddef.inc
+>      copy ..\toolkit\moddef.inc
+>
+> PolaTime.asm : ..\toolkit\PolaTime.asm
+>      copy ..\toolkit\PolaTime.asm
+>
+> PolaTime.obj : PolaTime.asm moddef.inc
+>      masm -D$(M_model) -MX PolaTime ;
+>      lib tkscsi.lib -+ $@ ;
+>
+> ####
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./sctlkit.ms in otkscsi and sgiscsi Page 5
+
+
+> #### host and SCSI adaptor specific files:  Choose ONLY one of the following:
+> ####
+>
+> #### For Macintosh users:
+> # scdpmac.obj : dpalette.h scdpmac.c sclowlvl.h
+> #     cl -c -A$(C_model) scdpmac.c ;
+> #     lib tkscsi.lib -+ $@ ;
+>
+> #### For DOS systems using the NCR ADP/S adaptor
+> #scdpncr.obj : scdpncr.c dpalette.h sclowlvl.h
+> #     cl -c -A$(C_model) scdpncr.c ;
+> #     lib tkscsi.lib -+ $@ ;
+>
+> #### For DOS systems using the IBM/PS2 SCSI adaptor
+> #scdpps2.obj : scdpps2.c dpalette.h sclowlvl.h tkinquir.h
+> #     cl -c -A$(C_model) scdpps2.c ;
+> #     lib tkscsi.lib -+ $@ ;
+>
+> #### For DOS systems using the Future Domain SCSI adaptor
+> #### Note: the oemscsi?.obj files are object files which are supplied in
+> ####       the Future Domain developers toolkit.  The following object
+> ####       modules are supplied with the Digital Palette Toolkit:
+> ####            futurdom\oemscsil.obj  Large Memory Model
+> ####            futurdom\oemscsim.obj  Medium Memeory Model
+> ####            futurdom\oemscsi.obj   Small Memory Model
+> ####       The complete Future Domain toolkit must be acquired from Future
+> ####       Domain.
+>
+> FD_OBJ = futurdom\oemscsil.obj
+>
+> scdpfdom.obj : scdpfdom.c sclowlvl.h
+>      cl -c -A$(C_model) scdpfdom.c ;
+>      lib tkscsi.lib -+ $@ ;
+>      lib tkscsi.lib -+ $(FD_OBJ) ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./tkhost.h in otkscsi and sgiscsi Page 1
+
+
+26a27
+> #ifndef SGI
+27a29
+> #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Oct 30 14:28 1993  diff of ./tkinquir.h in otkscsi and sgiscsi Page 1
+
+
+18c18
+< #define INQUIRY_BUFFER_SIZE  63
+---
+> #define INQUIRY_BUFFER_SIZE  64
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

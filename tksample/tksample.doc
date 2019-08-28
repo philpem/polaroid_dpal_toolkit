@@ -1,0 +1,67 @@
+ DEC/CMS REPLACEMENT HISTORY, Element TKSAMPLE.DOC
+ *1     6-MAY-1991 12:01:01 BROGNA "Renamed from tk_eval.doc"
+ DEC/CMS REPLACEMENT HISTORY, Element TKSAMPLE.DOC
+tk_sample.doc             11-oct-90  tc   Initial
+
+This document describes the source and executable programs in this
+directory. Most are sample programs which USE the toolkit.
+
+It is safe to run any of these programs.  Just type their name and they
+will tell you about any command line arguments.
+
+!!! The .EXEs assume that IMAGEPRINT has already been installed !!!
+
+Complete C source is provided.  The sources are compiled for MS-DOS
+using Microsoft C compiler, version 5.1.  You will find the .OBJs and .EXEs
+on the disk.  There is a Microsoft compatible makefile supplied if you
+wish to recompile the sources yourself.
+
+If you are writing a driver for the Digital Palette filmprinter....
+    You can use these as starting points for your driver. There is also
+    a program (mkerror.exe) which you can run to generate some wierd errors
+    in the Digital Palette filmprinter to test how that driver responds
+    correctly.
+
+If you are porting the Toolkit to another environment, e.g. OS/2 or UNIX...
+    You can use these programs as a validation suite.  You should be able
+    to run most of these programs on the ported toolkit.  There is also a
+    program (bdparm.exe) which generates all kinds of illegal calls into the
+    toolkit and verifies that the toolkit responds properly.  There
+    is also a program (timeit.exe) will measure how fast you can send data
+    to the Digital Palette.
+
+The sample programs (Use these as an example):
+    apic.[exe,c]        Takes one picture - most elementry program here
+                          Look at this first.
+    tkstat.[exe,c]      Inquires the Film Printer of all it "knows" and 
+                          displays it on the screen.  Doesn't take a
+                          picture.
+    tkfilm.[exe,c]      Inquires the Film Printer for film information and
+                          displays it on the screen.  Doesn't take a picture.
+    aspect.[exe,c]      Shows how to choose resolution to preserve aspect
+                          ratio.  Shoot a picture of a circle.
+    npics.[exe,c]       Shows how to batch a bunch of pictures.  Takes several
+                          pictures and demonstrates how to render and send
+                          data to the film printer simultaneously.
+    backg.[exe,c]       Shoots a picture with a swept background.  Also
+                          demonstrates how to load a color table if your
+                          application uses less than 24 bits of color.
+    mosaic.[exe,c]      Shoots several images on a single piece of film.
+	tldnld.[exe,c]		Downloads a film table to the palette.
+
+
+Test programs (Use these to test your driver or port):
+    mkerror.[exe,c]     NOT PORTABLE.  REQUIRES A CENTRONICS CONNECTION.
+                        Run it to generate any one of 4 errors.  Then
+                        follow the instructions on how to test your
+                        driver's response.  Just say "mkerror" to get
+                        a full set of instructions.
+    bdparm.[exe,c]      Makes a lot of illegal calls into the Toolkit and
+                        verifies that Toolkit responds properly.
+    timeit.[exe,c]      Times the transmission of data from the host to
+                        the filmprinter.
+
+Support source (These are linked with most of the programs):
+    demosup.c
+    sleep.c
+    demosup.h

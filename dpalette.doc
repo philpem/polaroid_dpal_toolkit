@@ -1,0 +1,4560 @@
+ DEC/CMS REPLACEMENT HISTORY, Element DPALETTE.DOC
+ *9    22-MAY-1991 15:15:18 BROGNA "Toolkit Version 3.0"
+ *8     3-MAY-1991 12:05:10 BROGNA ""
+ *7    16-OCT-1990 16:32:14 BROGNA "Latest"
+ *6    15-OCT-1990 11:20:12 CAMPBELL_T "Real update from cape.  Cockpit error on last replace"
+ *5    15-OCT-1990 09:40:47 CAMPBELL_T "Added intro + tutorial, Reworked error sections"
+ *4    12-OCT-1990 09:09:05 BROGNA "Update for Cape review"
+ *3     5-OCT-1990 17:22:22 BROGNA "update"
+ *2     3-OCT-1990 15:11:43 BROGNA "Single data structure"
+ *1    12-SEP-1990 11:01:30 BROGNA "ToolKit Upgrade"
+ DEC/CMS REPLACEMENT HISTORY, Element DPALETTE.DOC
+
+
+
+                    Polaroid Digital Palette Toolkit
+
+                             Version 3.0
+                              1-May-91
+
+
+
+                     Copyright 1990, Polaroid Corp.
+               Portions (c) 1986, 1987 Future Domain Corp.
+
+          License granted solely for use with Polaroid products.
+
+          Polaroid reserves the right to change this Toolkit.
+
+==============================================================================
+
+            TABLE OF CONTENTS BELONGS RIGHT HERE!
+ 
+
+==============================================================================
+INTRODUCTION
+
+This document describes a Software Toolkit for the Polaroid Digital Palette 
+Filmprinter.  Currently there are several configurations of the Toolkit 
+that are distributed:
+
+    --CPU--     --OS--    --Interface--     -- C Compiler -------
+    IBM-PC      MS-DOS      Centronics      Microsoft C,  ver 5.1
+    IBM-PC      MS-DOS      SCSI            Microsoft C,  ver 5.1
+    MACINTOSH   MAC-OS      SCSI            Lightspeed C, ver 3.01
+
+There will undoubtedly be even more configurations distributed in the
+future.  Consult the READ.ME files on your diskette to see which
+configuration you have.  This document applies to all distributed
+configurations.  There may be special notes particular to a specific
+configuration in the READ.ME files.
+
+The Toolkit provides a simple, consistent software interface to the
+Digital Palette filmprinter.  The interface consists of six C
+functions and a single data structure.  It is written in "vanilla" C
+and distributed in both source and object form.  Some configurations
+may have small amounts of assembly language. You are encouraged to
+take the source code and use it yourself or link it with your code
+and distribute it to others.
+
+
+MODIFIABLE OPERATING SYSTEM DEPENDENT UTILITIES
+
+
+Don't be intimidated by the size of this document.  You can develop a
+simple driver by writing less than 50 lines of C code and you
+probably won't ever look at 80% of this document.
+
+The Toolkit is full featured.  Every feature (and there are a lot of
+them) of the Digital Palette can be controlled through the Toolkit
+interface, but only if you want to use them.
+
+Who should use the Toolkit?
+    Independent Software Vendors wishing to write a Digital Palette driver 
+    for their application.
+
+    OEM users of the Digital Palette writing custom applications.
+
+    End Users of the Digital Palette who have a non-standard image file 
+    format that can't be read and printed by the normal application 
+    programs distributed with the Digital Palette.
+
+How do you use the Toolkit?
+
+    If your application's environment matches one of the distributed 
+    configurations:
+        Write your driver which makes calls to some of the six  
+        Toolkit functions and link it with the supplied object files.
+
+    If your application's environment matches one of the distributed 
+    configurations EXCEPT FOR THE C Compiler:
+        Recompile (and possibly reassemble) the Toolkit.
+        Write your driver which makes calls to some of the six  
+        Toolkit functions and link it with the recompiled Toolkit   
+        object files.
+
+    If you application environment doesn't match one of the distributed 
+    configurations:
+        You have to "port" the Toolkit source to your new environment.
+        This is the only instance when you actually have to look at the 
+        source of the Toolkit.  Pick the configuration that is closest to 
+        yours and dive in.  The Toolkit internals for the various
+        configurations may very well be different.  The Toolkit is
+        designed with as few operating system dependencies as possible.
+        You should refer to the section at the end of this document
+        called Modifiable Operating System Dependants Utilities.  There 
+        is no use of stdin or stdout. Your changes will probably be
+        confined to the "low end" of the Toolkit where actual IO to
+        the film printer takes place.  The internals of the various
+        configurations ARE NOT described in this document.  You must
+        examine the code.  Contact Polaroid for any assistance you may
+        need.
+
+
+Related Documents
+
+The Toolkit should have been distributed with some additional documents:
+
+    Digital Palette, Product Specification
+        This describes the generic behavior of a Digital Palette without
+        regard to the communication interface, e.g. Centronics or SCSI.
+
+    Digital Palette, Parallel Port Interface Specification
+    Digital Palette/SCSI Interface Specifications
+        These documents describe the specific behavior of a Digital 
+        Palette with the given communication interface.
+
+You will probably want to at least skim the Digital Palette, Product 
+Specification.  Unless you are porting the Toolkit, you shouldn't need 
+either the Parallel Port (Centronics) or SCSI Interface Specifications.
+
+It should be noted that every "input parameter" of the Digital Palette is 
+described in at least four places:
+
+    This document           Describes how to set the parameter using 
+                            the Toolkit interface and a brief   
+                            description of its effect on the
+                            Digital Palette.
+
+    Product Spec            Describes its effect on the Digital 
+                            Palette.
+
+    SCSI Interface Spec         
+    Parallel Port Interface Spec
+                            Describes how to get the parameter from
+                            the host computer into the Digital 
+                            Palette and duplicates its description 
+                            from the Product Spec.
+
+Unfortunately the names of a given parameter will be slightly different 
+depending on which document you look in.  As an example, the table below 
+gives the names used to set the Horizontal Resolution of the Digital 
+Palette:
+
+    This document               DP_HOR_RES(dp)
+                 
+    Product Spec                Resolutions, Horizontal
+                                        
+    SCSI Interface Spec         Mode Select, Horizontal Resolution
+            
+    Parallel Port Interface Spec    Set Horizontal Resolution
+    
+They all refer to the same entity.
+
+==============================================================================
+
+HOW DO I WRITE A DRIVER?
+
+You should:
+    Read the Introduction of this document if you haven't already done so.
+
+    Read this section.
+
+    Read the "read.me" file in the "samples" subdirectory on your Toolkit 
+    Distribution Disk.
+
+    Run some of the programs in the "samples" subdirectory on your Toolkit 
+    Distribution Disk.
+
+    Look at the source code of some of the sample programs.
+
+    Copy a sample program (apic.c is a good choice) and modify it for your
+    needs.
+
+You should probably start simple. In particular, start using default 
+parameters and let the Toolkit do all the work.  If you follow this 
+approach, your driver should be taking pictures on the Digital Palette 
+within a day.
+
+This simple approach won't be satisfactory of course.  You will have to 
+modify it, but get something simple working first.  Most of your work will 
+be in the user interface, e.g. how to present parameters to the user so 
+that they can be changed.  Other issues are described in the "Decisions you 
+will have to Make" section at the end of this chapter.
+
+
+
+GENERAL DESCRIPTION of the Toolkit:
+
+There are six C functions available in the Toolkit.  They are described in 
+detail in the "Digital Palette Toolkit Interface Functions".  This chapter 
+will provide an overview of how to use the functions.  The functions are:
+
+    DP_InitPrinter()      You have to call this function once at the
+                        beginning of your program.  It initializes the
+                        Toolkit code, initializes the Digital Palette,
+                        and establishes default parameter settings.
+
+    DP_StartExposure()    You have to call this function before the start of
+                        every picture.
+
+    DP_SendImageData()    This function delivers a line of pixel data to be 
+                        printed.
+
+    DP_TerminateExposure()  You have to call this function at the end of 
+                          every picture.
+
+    DP_SendPrinterParams()  You use this if you want to alter any of the 
+                          default parameter settings.
+
+    DP_GetPrinterStatus()   You use this if you want to monitor the status of
+                          the Digital Palette.
+
+
+All of the functions make use of a common data structure, DP_DATA, which is 
+defined in "dpalette.h".  All of the parameters that are sent to the 
+Digital Palette and all status information read from the Digital Palette 
+are stored in this data structure.
+
+A number of macros are defined which allow you to reference data in a 
+DP_DATA structure.  All of the macros are defined in "dpalette.h" and are 
+documented in detail in the "Toolkit Macros" chapter.
+
+
+
+
+A SIMPLE EXAMPLE, using all default parameters:
+
+The C code fragments below represents the simplest driver you could write.  
+It omits the function parameters and ignores error conditions, but does 
+show you the required flow of control.  It takes a single picture and 
+exits.
+
+    #include "dpalette.h"       /* Req'd for Toolkit definitions */
+
+    main()
+    {
+        DP_InitPrinter(...)     /* Init the hardware and initialize
+                                 to default parameters */
+
+        DP_StartExposure(...)   /* Start a new picture */
+
+
+        /* Loop over every line of every color in the image */
+        for ( color = 0 ; color < NUM_USER_COLORS ; color++ )
+        {   for ( line=0 ; line < ...# lines in image.. ; line++ )
+            {   .......     /* Get a line of pixel data ready to
+                               send to the printer. */
+
+                /* Send line of data to film printer */
+                DP_SendImageData( ...color...line... pixel_data) ;
+            }
+        }
+
+        DP_TerminateExposure(....)      /* End of picture */
+
+    }
+
+The hard work for you is preparing a line of data to send to the film 
+printer.  If you are exposing a 2048 line image, you need to present the 
+DP_SendImageData() function with a pointer to 2048 bytes of memory which 
+hold the pixels for that line.  The Digital Palette operates in a RED, 
+GREEN, and BLUE color space.  You must send all of the RED, GREEN, and BLUE 
+pixels separately (that is the purpose of the outermost "for" statement).
+The DP_SendImageData() function will encode and transmit those pixels to 
+the film printer.  The constant NUM_USER_COLORS is #defined to be 3 in 
+"dpalette.h".
+
+A SIMPLE EXAMPLE, changing some parameters 
+
+The program in the prior section is expanded to change the resolution of 
+the film printer.  Actual function arguments are supplied.  This code still 
+ignores error conditions; the next section won't.
+
+    #include "dpalette.h"       /* Req'd for Toolkit definitions */
+
+    main()
+    {   /* Declarations */
+        DP_DATA our_dp ;        /* Allocate storage for DP_DATA */
+        DP_DATA *dp = &our_dp ; /* and make a pointer to it */
+
+        int color, line ;       /* Index'es */
+        char pixel_buf[1024] ;  /* Where you build up lines to expose */
+
+        /* Execution starts here */
+        DP_InitPrinter(dp, SUPPRESS_BUFFER_WARNING, 0) ;
+                            /* Init the hardware and set default
+                               parameters in our DP_DATA */
+
+        DP_HOR_RES(dp) = 1024 ; /* Change picture size in our local copy
+                               of DP_DATA */
+        DP_SendPrinterParams(dp) ; /* and send it to Digital Palette */
+
+
+        DP_StartExposure(dp) ;  /* Start a new picture */
+
+
+        /* Loop over every line of every color in the image */
+        for ( color = 0 ; color < NUM_USER_COLORS ; color++ )
+        {   for ( line=0 ; line < 1024 ; line++ )
+            {   .......     /* Get a line of pixel data ready to
+                               send to the printer.  Put it in
+                               pixel_buf */
+
+                /* Send line of data to film printer */
+                DP_SendImageData(dp, line, pixel_buf, 1024, color) ;
+            }
+        }
+
+        DP_TerminateExposure(dp, END_OF_EXPOSURE) ; /* End of picture */
+
+    }
+
+
+Notice that all of the Toolkit function take a "dp" argument.  This is a 
+pointer to a DP_DATA structure which you must provide storage for.  There 
+is no "memory" inside the Toolkit functions themselves.  They all keep 
+everything they need to know inside the DP_DATA structure.
+
+The DP_DATA structure also has a copy of all of the Digital Palette 
+parameters.  Default values for these parameters are written into the 
+DP_DATA structure by the DP_InitPrinter() function.
+
+In this example, the user wanted to change the Horizontal Resolution.
+The following line changes the value inside of the DP_DATA structure pointed 
+to by "dp"
+
+    DP_HOR_RES(dp) = 1024 ;
+
+This C macro is defined inside of "dpalette.h".  There is a similar C macro 
+defined for every parameter stored in a DP_DATA structure.  You can read or 
+write this value.
+
+Remember that the DP_HOR_RES(dp) only changes the copy of the parameter in 
+memory.  You must a call to DP_SendPrinterParams() to force the Toolkit to 
+send the parameters from the DP_DATA structure to the film printer.
+
+Note that each call to DP_SendPrinterParams() will send ALL the parameters 
+in the DP_DATA structure to the filmprinter.  It is recommended, therefore, 
+that you modify all the parameters you want to change in the DP_DATA 
+structure and make a single call to DP_SendPrinterParams().
+
+Status information from the Digital Palette is also stored in DP_DATA.  For 
+example, DP_CAMERADESCRIPTION(dp) would return a string describing the type 
+of camera currently attached to the Digital Palette.  This is a read-only 
+string.  The detailed documentation for the macros lists whether it refers 
+to a parameter (READ/WRITE) or a status item (READ ONLY).
+
+Most of the Toolkit functions update some of the status items in a DP_DATA 
+structure.  The detailed function description will tell you exactly which 
+status items in DP_DATA are updated by each function call.
+
+You can force the update of some or all of the status items by making a 
+call to DP_GetPrinterStatus().
+
+A SIMPLE EXAMPLE, with proper error handling
+
+In the interest of simplicity, the previous examples omitted any error 
+handling.  This is a very, very bad idea.
+
+Each of the Toolkit functions returns non-zero to indicate an error.  
+Everytime you call a Toolkit function, YOU MUST CHECK ITS ERROR RETURN.
+
+The following C code fragment illustrates an elegant way to deal with 
+errors.
+
+    if ( DP_SendPrinterParams(dp) )
+    {   /* We got an error sending parameters to the film printer.
+           DP_ERRORMESSAGE(dp) has a string which we need to present to
+           the user.  We will do that and exit */
+        printf ("%s\n", DP_ERRORMESSAGE(dp) ) ;
+        exit(1) ;
+    }
+
+The Toolkit functions will detect any kind of error; clear it; provide you
+a string describing the error in DP_ERRORMESSAGE(dp); and take a non-zero 
+return.  It is your responsibility to get the error message to the user.  
+The value last returned by a Toolkit function is kept in the DP_DATA 
+structure.  You can reference it by DP_ERRORCLASS(dp).
+
+Almost all of the errors are fatal.  You should present the error message 
+to the user and give up on the current exposure.  If you want to try to 
+take another picture, you must start over with DP_StartExposure() and 
+DP_SendPrinterParams().
+
+The functions return Negative Numbers to indicate a Fatal Error.  There is 
+a complete list of all possible error returns in the "Error and Warning 
+Descriptions" section.  Examples of fatal errors:
+
+    Camera ran out of film.
+    Film Printer is powered off.
+    You supplied a bad value for a parameter,
+        e.g. Horizontal Resolution = 100000.
+    Film Printer is broken, it failed its internal self-test diagnostics.
+
+
+
+Some of the errors are considered warnings.  A function returns a Positive 
+Number to indicate a Warning.  Warnings indicate something has happened 
+which your application should probably deal with.  There is a complete list 
+of all Warnings in the "Error and Warning Descriptions" section.  A 
+description of how you should handle each warning is found in the "Handling 
+Errors and Warnings" section.  Examples of warnings are:
+
+    Remove Film Warning 
+                    There is a piece of partially exposed film in
+                    the camera left over from a prior exposure.
+                    You only get this when the Digital Palette can't 
+                    advance the film in the camera (A Pack Back or 
+                    4x5 Back is attached).
+
+    Exposure Active Warning
+                    You can't start another picture yet because there 
+                    is a prior exposure in process. You only get this 
+                    when the Digital Palette can't advance the film in 
+                    the camera (A Pack Back or 4x5 Back is attached).
+
+    
+ 
+For the first cut of your driver, you should probably treat warnings as 
+fatal.  Once you are taking pictures successfully, you should then modify 
+the driver to handle warnings.
+
+DOING TWO THINGS AT ONCE
+
+The prior examples only did "one thing at a time".  When a call was made 
+into the Toolkit, the function didn't return until it finished sending all 
+of the data to the film printer.  If the film printer couldn't take data, 
+the Toolkit function waited (by polling the film printer) until the film 
+printer was ready, sent the data and returned.
+
+There are two conditions when the film printer can't accept data:
+    The film printer's internal buffer is full because you are sending 
+    pixel data to the film printer faster than the film printer can expose 
+    the data on film.
+
+    There is a prior exposure in process with a manual camera back (Pack 
+    or 4x5) attached. You can't start a new exposure until the user has 
+    pulled the film from the current exposure.
+
+There are times when you might want your program to do something
+while waiting for the film printer to accept data.  You might want to
+be preparing the next line of pixel data to send while waiting for
+the last line to be transmitted.  You might want to update a status
+line on the screen while waiting for an exposure to complete.
+
+Setting DP_WAITFORBUFFER(dp) to SHOW_BUFFER_WARNINGS in the DP_DATA 
+structure causes the Toolkit functions to immediately return if they can't 
+send data to the film printer.  They will return some warning value (a 
+positive number) to inform you that they DID NOT complete and to tell you 
+why.  It is your responsibility to continue making calls to the function 
+until it returns successfully.
+
+DECISIONS YOU WILL HAVE TO MAKE:
+
+
+What controls do you present to the user?
+
+    There are a lot of parameters available for controlling the Digital 
+    Palette.  You need to decide which ones to let the user change.
+    Polaroid would suggest the following as a minimum:
+        Horizontal Resolution
+        Film Type
+        Some kind of exposure control so they can adjust the color 
+            balance and brightness of the image
+
+How do I keep circles from turning into ovals?
+
+    Please read the Aspect Ratio Chapter of the "Digital Palette Product 
+    Specification".  It tells you how to choose the vertical resolution to 
+    preserve aspect ratio.
+
+    That chapter also gives the exact algorithm for setting all the required 
+    Digital Palette parameters if you are printing a pure bitmap image.
+
+
+How and when do I render data?
+
+    The most obvious solution is to render a single line of data and send 
+    it to the film printer.  This approach minimizes the amount of storage 
+    required in the host computer because you only have to store one line 
+    of data.  This approach also minimizes the total exposure time because 
+    the film printer is actually exposing prior lines while you are 
+    rendering the current line.  The only time this technique won't work 
+    is if it takes you more than 50 milliseconds to render a line of 
+    data.  If there is more than 50 milliseconds between lines of data,
+    artifacts will show up on film. [See the Exposure Rate Control chapter 
+    of the Digital Palette Product Specification.]
+
+
+
+    If it takes you more than 50 milliseconds to render a line of data,
+    you need to completely render a color and store it someplace, either 
+    in memory or on disk.  Once the color is completely rendered, you 
+    deliver it to the film printer directly from the temporary storage.
+    This technique won't cause artifacts on film, but it does increase 
+    your total exposure time.
+
+    If you can "multi-task", you can shorten the total exposure time by 
+    rendering the current color to temporary storage while you are 
+    delivering the prior color to the film printer from another temporary 
+    storage area.  This can even be accomplished under MS-DOS by using the
+    judicious use of SHOW_BUFFER_WARNINGS.
+
+What format of pixel data should I use?
+
+    The film printer handles two formats of data:
+        RGB         Raw 8 bit pixels
+        RLE         Run-Length Encoded Data.
+
+    By default, the Toolkit expects RGB data.  It converts it to RLE and 
+    sends it to the film printer.
+
+    By appropriately setting IMAGE_COMPRESSION(dp), you can cause the 
+    Toolkit to expect RGB data and send it to the film printer as RGB.
+    This is appropriate for "scanned images" as they don't compress very 
+    well and the Toolkit will spend more time converting from RGB to RLE
+    than is saved in the normal reduced transmission time of RLE.
+
+    If the source of the image to be printed is already run-length encoded 
+    in some fashion, you might want to convert to Digital Palette RLE 
+    format yourself. You would set IMAGE_COMPRESSION(dp) appropriately to 
+    tell the Toolkit that the pixel data is already in RLE format and 
+    should be sent as is.
+
+What if my application driver architecture won't let the user change
+any parameters?
+
+    All of the default parameters are stored in a "configuration
+    file" on disk.  The DP_InitPrinter() function locates that
+    configuration file, reads it, and sets all of the parameters in
+    the DP_DATA structure accordingly.
+
+    If you can't change parameters in the driver because your
+    application won't let a driver "talk" to the screen/keyboard, you
+    need to provide a way for the user to alter the "configuration
+    file". 
+
+    The best way, if possible, is to "shell out" of the driver and
+    let the user run a program which modifies the configuration file.
+    After the configuration file is modified, the user "exits" back
+    to the driver which reads the configuration file and uses its
+    parameter settings.
+
+    Depending on which operating system your Toolkit is designed
+    for, there may be a standalone program included with your Toolkit which
+    modifies the configuration file.  Check the read.me files on the Toolkit
+    diskette.  If one isn't included, contact Polaroid; we can either supply
+    you with one or assist you in writing one.
+
+    If it is impossible to "shell out" of the driver and into the operating
+    system, then the user is forced to pick their operating parameters BEFORE
+    STARTING the application. He should then modify the configuration file 
+    as above, and then start the application.  This is obviously inferior.  
+    If they change their minds after starting the application, they have to
+    exit the application, change the configuration file, and restart
+    the application.
+
+
+
+==============================================================================
+
+TOOLKIT DATA STRUCTURE: DP_DATA
+
+   All Toolkit routines require access to a common data structure.  An address
+   to this structure, which is TYPEDEF'd in the DPALETTE.H include file as
+   DP_DATA, is passed as an argument to all Toolkit function calls.  It is
+   the responsibility of the calling application to declare this structure.
+
+   The DP_DATA structure contains Digital Palette status information, data
+   used as parameters to various Digital Palette commands, as well as data
+   which is used by the Toolkit subroutines to control and monitor the status
+   of the interface between the application and the Digital Palette.
+
+   Polaroid Corporation expects that the format and contents of these data
+   structures will change in future enhancements to this Toolkit.  Macros are
+   defined in DPALETTE.H to refer to all structure members and should be
+   used instead of referring to a structure member directly by name.
+
+   See the Toolkit Data Structure Macros section in this document for more
+   information.
+
+==============================================================================
+
+TOOLKIT INTERFACE FUNCTIONS
+
+   There are six Toolkit functions which are available for an application to
+   call.  The source code for each of these functions is contained on the
+   Toolkit diskette which was distributed along with this document.
+
+      DP_InitPrinter()       Reads the configuration file to obtain user
+                             specified defaults, initializes the Digital
+                             Palette, and sends all user specified defaults
+                             to the Digital Palette.
+
+      DP_SendPrinterParams() Sends exposure control parameters to the
+                             Digital Palette.
+
+      DP_StartExposure()     Tells the Digital Palette to prepare to receive
+                             image data for a new exposure.
+
+      DP_SendImageData()     Sends image data to the Digital Palette.
+
+      DP_TerminateExposure() Tells the Digital Palette that the exposure is
+                             complete.
+
+      DP_GetPrinterStatus()  Obtains information about the Digital Palette
+                             and its current status.
+
+
+
+   Included on the Toolkit diskette are sample applications which use these
+   Toolkit functions.  You are encouraged to review these samples before
+   attempting your first Digital Palette application in order to understand
+   the various ways in which the Toolkit routines can be called.
+
+------------------------------------------------------------------------------
+
+ DP_InitPrinter()
+
+     Summary:
+
+         #include "dpalette.h"
+         int DP_InitPrinter(DP_DATA *dp, char wait, int port)
+
+       Input:
+
+         DP_DATA    *dp    Pointer to Digital Palette Toolkit data structure
+                           which is defined in the DPALETTE.H include file.
+         char       wait   Sets DP_WAITFORBUFFER flag.  Possible values for
+                           this argument should be one of the following values
+                           which are symbolically defined in the DPALETTE.H
+                           include file:
+                                SUPPRESS_BUFFER_WARNING 
+                                SHOW_BUFFER_WARNING
+                           See the Buffer Warning Suppression and Error and
+                           Warning Description sections in this document for
+                           information about the usage of this argument.
+                           If in doubt, set it to SUPPRESS_BUFFER_WARNING!
+         int        port      Indicates where and/or how to locate a Digital
+                           Palette.  The Centronics parallel port version and
+                           the SCSI version differ slightly in the possible
+                           values and usage of this parameter.
+                           CENTRONICS:  If zero, the port number saved in the
+                              configuration file is used as the interface port
+                              to the Digital Palette.  If non-zero, this
+                              parameter specifies which port is to be used to
+                              communicate with the Digital Palette.
+                           SCSI:  This parameter specifies which SCSI ID to 
+                              use in order to locate a Digital Palette.
+                              Typically the first time this function is called
+                              this parameter should be zero in order to locate
+                              the first Digital Palette on the bus.  To find
+                              additional palettes on the SCSI bus, add 1 to
+                              the last SCSI ID found and specify this new ID
+                              as this parameter.  (Note:  Each Digital Palette
+                              on the bus requires its own DP_DATA structure.)
+
+
+   Output:
+
+         Fatal Error < 0    Many are possible
+
+         Okay        = 0    NOERROR
+
+         Warning     > 0    Possible Warning Returns:
+                             EXPOSUREACTIVE (only if SHOW_BUFFER_WARNING)
+                             REMOVEFILM     (only if SUPPRESS_BUFFER_WARNING)
+
+
+ Modifies:
+
+         DP_DATA structure, all members.
+
+------------------------------------------------------------------------------
+
+ DP_SendPrinterParams()
+
+     Summary:
+
+         #include "dpalette.h"
+         int DP_SendPrinterParams(DP_DATA *dp)
+
+       Input:
+
+         DP_DATA    *dp    Pointer to Digital Palette Toolkit data structure
+                           which is defined in the DPALETTE.H include file.
+
+   Output:
+
+         Fatal Error < 0    Many are possible
+
+         Okay        = 0    NOERROR
+
+         No Warnings are ever returned.
+
+ Modifies:
+
+         DP_ERRORCLASS
+         DP_CONFIGERROR
+         DP_PORTERROR
+         DP_PRINTERERROR
+         DP_WARNING
+         DP_ERROR
+         DP_ALL_OKAY
+         DP_ERRORMESSAGE
+         DP_ERRORNUMBER
+
+------------------------------------------------------------------------------
+
+ DP_StartExposure()
+
+     Summary:
+
+         #include "dpalette.h"
+         int DP_StartExposure(DP_DATA *dp)
+
+       Input:
+
+         DP_DATA    *dp        Pointer to Digital Palette Toolkit data
+                            structure which is defined in the DPALETTE.H
+                            include file.
+
+   Output:
+
+         Fatal Error < 0    Many are possible
+
+         Okay        = 0    NOERROR
+
+         Warning     > 0    Possible Warning Returns:
+                            EXPOSUREACTIVE (only if SHOW_BUFFER_WARNING)
+                            REMOVEFILM     (only if SUPPRESS_BUFFER_WARNING)
+
+ Modifies:
+
+         DP_ERRORCLASS
+         DP_CONFIGERROR
+         DP_PORTERROR
+         DP_PRINTERERROR
+         DP_WARNING
+         DP_ERROR
+         DP_ALL_OKAY
+         DP_ERRORMESSAGE
+         DP_ERRORNUMBER
+
+------------------------------------------------------------------------------
+
+ DP_SendImageData()
+
+     Summary:
+
+         #include "dpalette.h"
+         int DP_SendImageData(DP_DATA *dp, int l, char *b, int n, int c)
+
+       Input:
+
+         DP_DATA    *dp       Pointer to Digital Palette Toolkit data
+                           structure which is defined in the DPALETTE.H
+                           include file.
+         int l                Line number relative to top of image.  See the
+                           Send Line RGB and Send Line RLE commands in the
+                           Detailed Command Description of the Digital Palette
+                           Parallel Port Specifications for more information
+                           about the possible values of this argument.
+         char *b              Pointer to application buffer containing image
+                           data to be sent to the Digital Palette.
+         int n                Number of bytes in the image buffer to send.
+         int c                Filter color through which the Digital Palette
+                           will expose this image data.  See the Expose Color
+                           command in the Detailed Command Description
+                           section of the Digital Palette Parallel Port
+                           Specification for more information about the
+                           possible values for this argument.
+
+   Output:
+
+         Fatal Error < 0    Many are possible
+
+         Okay        = 0    NOERROR
+
+         Warning     > 0    Possible Warning Returns:
+                              BUFFERWARNING   (only if SHOW_BUFFER_WARNING)
+
+
+
+ Modifies:
+
+         DP_ERRORCLASS
+         DP_CONFIGERROR
+         DP_PORTERROR
+         DP_PRINTERERROR
+         DP_WARNING
+         DP_ERROR
+         DP_ALL_OKAY
+         DP_ERRORMESSAGE
+         DP_ERRORNUMBER
+
+------------------------------------------------------------------------------
+
+ DP_TerminateExposure()
+
+     Summary:
+
+         #include "dpalette.h"
+         int DP_TerminateExposure(DP_DATA *dp, int m)
+
+       Input:
+
+         DP_DATA    *dp       Pointer to Digital Palette Toolkit data
+                           structure which is defined in the DPALETTE.H
+                           include file.
+         int m                Method of termination determines whether the
+                           Terminate Exposure command or the Abort command is
+                           sent to the Digital Palette.  See the Terminate
+                           Exposure and Abort commands in the Detailed Command
+                           Descriptions Section of the Digital Palette 
+                           Parallel Port Specifications for more information 
+                           about these commands.  Possible values for this
+                           argument should be one of the following values
+                           which are symbolically defined in the DPALETTE.H
+                           include file:
+                              END_OF_EXPOSURE    Sends the Terminate Exposure
+                                                    command.
+                              ABORT_EXPOSURE     Sends the Abort command.
+                              SMART_ABORT        Terminates or Aborts the
+                                                 current image, preserving
+                                                 previously sent images which
+                                                 still may be in the queue.
+
+   Output:
+
+         Fatal Error < 0    Many are possible
+
+         Okay        = 0    NOERROR
+
+         Warning     > 0    Possible Warning Returns:
+                             EXPOSUREACTIVE (only if SHOW_BUFFER_WARNING)
+                             REMOVEFILM     (only if SUPPRESS_BUFFER_WARNING)
+
+
+ Modifies:
+
+         DP_ERRORCLASS
+         DP_CONFIGERROR
+         DP_PORTERROR
+         DP_PRINTERERROR
+         DP_WARNING
+         DP_ERROR
+         DP_ALL_OKAY
+         DP_ERRORMESSAGE
+         DP_ERRORNUMBER
+
+------------------------------------------------------------------------------
+
+ DP_GetPrinterStatus()
+
+     Summary:
+
+         #include "dpalette.h"
+         int DP_GetPrinterStatus(DP_DATA *dp, int f)
+
+       Input:
+
+         DP_DATA    *dp       Pointer to Digital Palette Toolkit data
+                           structure which is defined in the DPALETTE.H
+                           include file.
+         int        f         Inquiry flag whose bits, when set, indicate
+                           which Inquire Command(s) are to be sent to the
+                           Digital Palette.  Currently bits zero thru six are 
+                           specified as inquiry bits; bits 7 thru 15 are 
+                           reserved for future enhancements.
+                              msb 15 -  7  6  5  4  3  2  1  0 lsb
+                                   |    |  |  |  |  |  |  |  |
+                                   \    /  |  |  |  |  |  |  inquire error
+                                    \  /   |  |  |  |  |  inquire camera
+                                     \/    |  |  |  |  inquire options
+                                     |     |  |  |  inquire exposure status
+                                     |     |  |  inquire films
+                                     |     |  inquire aspect ratio
+                                     |     inquire buffer
+                                     |
+                                     reserved for future use
+                           Possible values for this argument should be a 
+                           combination of one or more of the following values
+                           which are symbolically defined in the DPALETTE.H
+                           include file.  These values may be combined by
+                           using the bitwise OR operator to indicate multiple
+                           inquiries:
+                              INQ_ERROR   Send the Inquire Error command.
+                              INQ_CAMERA  Send the Inquire Camera command.
+                              INQ_OPTIONS Send the Inquire Options command.
+                              INQ_STATUS  Send the Inquire Status command.
+                              INQ_FILMS   Send the Inquire Film Name command.
+                              INQ_ASPECT  Send the Inquire Aspect Ratio
+                                             command.
+                              INQ_BUFFER  Send the Inquire Buffer command.
+
+                              ALL_INQUIRES  Perform all of the Inquiry 
+                                            commands.
+
+   Output:
+
+         Fatal Error < 0    Many are possible
+
+         Okay        = 0    NOERROR
+
+         No Warnings are ever returned.
+
+
+ Modifies:
+
+         Macro values may be modified depending upon the bits which are
+         set in the Inquiry argument:
+
+         INQ_ERROR:
+
+            DP_ERRORCLASS
+            DP_CONFIGERROR
+            DP_PORTERROR
+            DP_PRINTERERROR
+            DP_WARNING
+            DP_ERROR
+            DP_ALL_OKAY
+            DP_ERRORMESSAGE
+            DP_ERRORNUMBER
+
+         INQ_CAMERA:
+
+            DP_CAMERABACK
+            DP_CAMERADESCRIPTION
+            DP_AUTOADVANCE
+            DP_MANUALEJECT
+            DP_BLACKANDWHITEFILM
+            DP_FILMWASDOWNLOADED
+            DP_CAMERABACKFILM
+            DP_FILMNUMBER
+
+         INQ_OPTIONS:
+
+            DP_MAXHORIZONTALRES
+            DP_ON_BOARD_RAM
+            DP_SCSIPORT
+            DP_ROM_VERSION
+
+         INQ_STATUS:
+
+            DP_BUFFERAVAILABLE
+            DP_EXPOSINGIMAGE
+            DP_SINGLEIMAGEMODE
+            DP_IMAGESINQUEUE
+            DP_CURRENTCOLOR
+            DP_LINES_EXPOSED
+            DP_EXPOSURE_STATUS
+
+         INQ_FILMS:
+
+            DP_FILM_NAME
+            DP_FILM_PRESENT
+            DP_DEFAULT_FILM
+
+         INQ_ASPECT:
+
+            DP_ASPECT_RATIO
+            DP_X_ASPECT
+            DP_Y_ASPECT
+
+         INQ_BUFFER:
+
+            DP_FREE_BUFFER
+            DP_TOTAL_BUFFER
+
+==============================================================================
+
+ERROR HANDLING
+
+Fatal Errors
+
+A Fatal error is indicated when one of the Toolkit functions returns a
+negative value. (The DP_ERRORCLASS macro holds the last value returned
+by a Toolkit function):
+    -1  LOGICERR        Synchronous/Logic Error
+    -2  HARDWERR        Asynchronous/Hardware Error
+    -3  TIMEOUT         Communications Error
+    -4  DISCONNECTED    Communications Error
+    -5  UNKNOWNPORT     Communications Error
+    -6  CONFIGERR       Configuration File Error
+    -7  DPTOOLKITERR    Toolkit Usage Error
+The exact descriptions of the errors are listed in the next chapter.
+
+
+All of the FATAL errors can be treated in the same fashion by your application
+code:
+
+    Show the user the error message pointed to by the DP_ERRORMESSAGE macro
+
+    Allow the user to fix the problem (they should be able to figure out
+    what to do from the error message)
+
+    Allow them to CONTINUE.  You should call DP_InitPrinter() before trying
+    to start another exposure.
+
+    Allow them to EXIT the application.
+
+
+Warnings:
+
+A Warning is indicated when one of the Toolkit functions returns a
+positive value. (The DP_ERRORCLASS macro holds the last value returned
+by a Toolkit function):
+     1  BUFFERWARNING   Buffer Unavailable Warning
+     2  EXPOSUREACTIVE  Active Exposure Warning
+     3  REMOVEFILM      Remove Film Warning
+The exact descriptions of the warnings are listed in the next chapter.
+
+A naive driver can treat a Warning just like a Fatal Error.  Your first
+cut at a driver should probably do this.  If you have the DP_WAITFORBUFFER
+macro flag set to SUPPRESS_BUFFER_WARNING (which a naive driver should do),
+the only warning you will ever get is REMOVEFILM.  The only disadvantage
+of treating this as a FATAL error is that there may be long pauses (with no
+notification to the user) while a Toolkit function is waiting for an exposure
+to complete.
+
+To avoid these long pauses, set the DP_WAITFORBUFFER macro flag to
+SHOW_BUFFER_WARNING.  You must then test the following functions for
+an EXPOSUREACTIVE return and take the specified action:
+
+        DP_InitPrinter()
+        DP_StartExposure()
+            Inform the user that an exposure is in process.
+            Reissue the function call until it returns NOERROR.
+            Tell the user to pull the film.
+            Wait for confirmation from the user that the film was removed.
+
+
+        DP_TerminateExposure()
+            Two choices:
+                Monitor the progress of the exposure via DP_GetPrinterStatus()
+                Periodically give the user some feedback as to progress,
+                    e.g. display the number of lines exposed
+                When the exposure is complete, tell the user to pull the film.
+                Wait for confirmation from the user that the film was removed.
+
+                --or--
+                Silently proceed.  If the user starts another exposure,
+                the next DP_StartExposure() call will prevent them from
+                proceeding until they have removed the film.
+
+            The appropriate choice for you depends on your application.
+            The second choice (Silently proceeding) is probably the
+            superior choice.
+
+Regardless of how you decide to deal with DP_TerminateExposure(), you MUST
+treat DP_InitPrinter() and DP_StartExposure() as recommended above.  There
+MAY BE an exposure in progress when your application is first started.
+
+Don't forget that setting the DP_WAITFORBUFFER macro flag to
+SHOW_BUFFER_WARNING affects DP_SendImageData() as well as the three functions
+listed above.  Make sure that the DP_WAITFORBUFFER macro flag is set
+to SUPPRESS_BUFFER_WARNING before a call to DP_SendImageData() unless you
+are prepared to deal with the BUFFERWARNING return from DP_SendImageData() as
+described in the next paragraphs.
+
+The only other possible warning return is BUFFERWARNING. A
+BUFFERWARNING return indicates that the internal film printer buffer
+is currently full and cannot accept data. DP_SendImageData() is the
+only function that will return BUFFERWARNING and only when the
+DP_WAITFORBUFFER macro flag is set to SHOW_BUFFER_WARNING. 
+
+You should only set DP_WAITFORBUFFER to SHOW_BUFFER_WARNING and test
+the return of DP_SendImageData() if you want to do something (e.g. render
+data) when the film printer buffer is full.  Remember that you must
+reissue the DP_SendImageData() call when it returns BUFFERWARNING.  The pixel
+data was not delivered to the film printer.
+
+Otherwise, make sure that DP_WAITFORBUFFER is set to SUPPRESS_BUFFER_WARNING
+for the DP_SendImageData() call and it won't return until the pixel data has
+been delivered to the film printer.
+
+You can monitor the exact "fullness" of the film printer's internal
+buffer by the DP_FREE_BUFFER macro.
+
+
+==============================================================================
+
+ERROR AND WARNING DESCRIPTIONS
+
+   All Digital Palette Toolkit routines set a macro DP_ERRORCLASS to a 
+   non-zero value on warnings or errors and zero for success.  This value 
+   is also returned by all Toolkit functions.
+
+   Upon return, the DP_DATA structure contains enough information for the
+   calling routine to take any corrective action necessary.  Usually 
+   corrective action includes showing the user an error message.  See the 
+   section Error Handling section for how your code should behave when it
+   gets these errors.
+
+   Success:
+
+     0  NOERROR
+
+        The Digital Palette reports no errors.  The Toolkit function called
+        completed successfully.
+
+   Fatal Errors:
+
+    -1  LOGICERR Synchronous/Logic Error:
+
+         The Digital Palette has determined that the command sent to it cannot
+         be executed.  If this error class is returned while sending an image
+         for exposure the current exposure being sent is canceled.  Any
+         previous exposures sent completely and residing in the Digital
+         Palette buffer will continue unaffected.
+
+         This is typically caused by a bug in the application program,
+         e.g. selecting a Horizontal Resolution of 100000.
+
+         There is a complete list of all possible LOGICERR error messages in
+         the following documents:
+
+            Digital Palette, Parallel Port Interface Specification
+            Digital Palette/SCSI Interface Specifications
+
+
+    -2  HARDWERR Asynchronous/Hardware Error:
+
+         The Digital Palette has determined that an error has occurred which
+         prevents exposures from continuing.  If this error class is returned
+         then all exposures contained in the Digital Palette buffer are
+         canceled.
+
+         Typical examples are of HARDWERRs are:
+            The camera is out of film
+            The Film Printer is broken
+
+
+         There is a complete list of all possible HARDWERR error messages in
+         the following documents:
+
+            Digital Palette, Parallel Port Interface Specification
+            Digital Palette/SCSI Interface Specifications
+
+    -3  TIMEOUT Communications Error:
+
+         The Toolkit interface routines could not communicate with the Digital
+         Palette within a reasonable amount of time.
+
+         This is typically caused by:
+            The Film Printer is powered off.
+            The Film Printer is disconnected from the computer.
+            The Film Printer is connected to a different port than is
+                specified in the configuration file.
+            
+
+    -4  DISCONNECTED Communications Error:
+
+         Centronics Meaning:
+
+         The Parallel Port Select (SLCT) line is not asserted.  See the
+         Hardware Interface Description section of the Digital Palette
+         Parallel Port Interface Specifications for more information.
+
+         This is typically caused by:
+            The Film Printer is powered off.
+            The Film Printer is disconnected from the computer.
+            The Film Printer is connected to a different port than is
+                specified in the configuration file.
+
+    -5  UNKNOWNPORT Communications Error:
+
+         Centronics Meaning:
+
+         The Toolkit interface routines attempted to communicate with the
+         Digital Palette through a parallel port which is not known to the
+         operating system.
+
+			SCSI Meaning:
+			
+			This error class is not supported by the SCSI interface.
+
+    -6  CONFIGERR Configuration File Error:
+
+         The Toolkit routine DP_InitPrinter() could not find the configuration
+         file or an error occurred while trying to read the default parameters
+         from the configuration file.
+
+         Under MS-DOS, the configuration file is located by examining the
+         environment variable DPALETTE.
+
+    -7  DPTOOLKITERR Toolkit Usage Error:
+
+         Ambiguous or invalid data prevented a Toolkit routine from 
+         successfully completing.  There are currently two Toolkit routines 
+         which can generate this type of error class.
+
+         DP_SendImageData() will return this error if the Image Compression
+         flag in the DP_DATA structure is unknown value.  See the section
+         on Run Length Encoding in this document for more information.
+
+         DP_TerminateExposure() will return this error if the termination
+         method passed to it is unknown.  See the functional description of
+         DP_TerminateExposure() for more information.
+
+   Warnings:
+
+     1  BUFFERWARNING Buffer Unavailable Warning:
+
+         The Digital Palette has insufficient buffer space available to store
+         the data to be transmitted to it.
+
+         This warning is only returned by the DP_SendImageData() function.
+
+         This warning is only returned when the DP_WAITFORBUFFER macro flag
+         is set to SHOW_BUFFER_WARNING.
+
+         If this value is returned, it means that the data has NOT
+         been sent to the Digital Palette and the caller should try again.
+
+     2  EXPOSUREACTIVE Active Exposure Warning:
+
+         The Digital Palette is CURRENTLY EXPOSING an image and the attached
+         camera back requires that the user manually remove the film when the
+         exposure is complete.
+
+         This warning can be returned from:
+                DP_InitPrinter()
+                DP_StartExposure()
+                DP_TerminateExposure()
+
+         This warning is only returned when the DP_WAITFORBUFFER macro flag
+         is set to SHOW_BUFFER_WARNING.
+
+         The application must monitor the progress of the exposure in process
+         and prompt the user to remove the film when it is complete.  The
+         application MUST NOT start another exposure until it has:
+                1) Detected that the current exposure is complete via
+                   calls to DP_GetPrinterStatus()
+                2) Informed the user to pull the film
+                3) Gotten positive feedback from the user that the film
+                   was removed, e.g. 'Hit any key to continue.'
+
+     3  REMOVEFILM Remove Film Warning:
+
+         The Digital Palette HAS COMPLETED exposing an image and the
+         attached camera back requires that the user manually remove the
+         film before starting another exposure.
+
+         This warning can be returned from:
+                DP_InitPrinter()
+                DP_StartExposure()
+                DP_TerminateExposure()
+
+         This warning is only returned when the DP_WAITFORBUFFER macro flag
+         is set to SUPPRESS_BUFFER_WARNING.
+
+         Before proceeding, the application must:
+                1) Inform the user to pull the film.
+                2) Gotten positive feedback from the user that the film
+                   was removed, e.g. 'Hit any key to continue.'
+
+
+==============================================================================
+
+WARNING SUPPRESSION
+
+    The setting of the DP_WAITFORBUFFER macro flag determines how the
+    Toolkit behaves when the film printer can't accept data.
+
+    Legal settings for the DP_WAITFORBUFFER macro flag are:
+         SUPPRESS_BUFFER_WARNING
+         SHOW_BUFFER_WARNING
+
+    There are two instances when the film printer can't accept data:
+
+        --The filmprinter's internal buffer is full--
+                Affects:    DP_SendImageData()
+
+                Behavior:
+                    SUPPRESS_BUFFER_WARNING
+                            Waits for buffer space to become available and
+                            sends the pixel data to filmprinter.
+                            Returns NOERROR.
+
+                    SHOW_BUFFER_WARNING
+                            Returns immediately with a BUFFERWARNING warning.
+                            The pixel data has not been sent to the film
+                            printer.
+
+
+        --An exposure is in progress and there is a manual camera back--
+        --attached which requires the user to manually remove the film--
+                Affects:    DP_InitPrinter()
+                            DP_StartExposure()
+                            DP_TerminateExposure()
+
+                Behavior:
+                    SUPPRESS_BUFFER_WARNING
+                        Waits for the exposure to complete and returns
+                        a REMOVEFILM warning.
+                            
+                    SHOW_BUFFER_WARNING
+                       DP_InitPrinter()
+                       DP_StartExposure()
+                          Returns immediately with an EXPOSUREACTIVE warning.
+                          The exposure is still in process.  The functions
+                          did not successfully complete.  They must be
+                          reissued until they return NOERROR.
+
+                        DP_TerminateExposure()
+                          Returns immediately with an EXPOSUREACTIVE warning.
+                          The exposure is still in process. The
+                          DP_TerminateExposure() successfully completed.  It
+                          must not be reissued.  The driver may elect to
+                          monitor the status of the exposure with repeated
+                          calls to DP_GetPrinterStatus() to determine when the
+                          exposure is complete.
+
+
+   The  DP_WAITFORBUFFER macro flag is set to the value of the third argument
+   to the Toolkit routine DP_InitPrinter() which should be the first Toolkit
+   routine called by any application. The DP_WAITFORBUFFER macro flag may be
+   modified any time subsequent to calling DP_InitPrinter() without adverse
+   effects.
+
+
+
+==============================================================================
+
+RUN LENGTH ENCODING
+
+   The Digital Palette is capable of accepting image data as run length 
+   encoded or uncompressed.
+
+   The decision as to whether to send the image data run length encoded or not
+   is for the most part dependent upon the complexity of the image.  For 
+   instance, a line from simple business graphic bar chart usually has many
+   adjacent pixels of the same value and would compress to a relatively small
+   number of bytes.  The time saved in sending just a few bytes of image data
+   justifies the computational cost of the compression.  An added benefit of
+   sending the data as run length encoded is that, as compressed, the image
+   data occupies much less buffer space within the Digital Palette.
+
+   A line of image data which has few adjacent pixels of the same value will
+   not compress much smaller than its original size.  The time saved in 
+   sending a line from a complex image is not great and does not justify the 
+   computational costs of compression.  Note that in the extreme, if the line 
+   of image data has NO adjacent pixels of the same value, compression will 
+   yield more data bytes than uncompressed!
+
+   DP_SendImageData(), when called, will examine the Image Compression flag,
+   DP_IMAGE_COMPRESSION, to determine how the caller wants the image data
+   sent.  The DP_IMAGE_COMPRESSION flag has three possible values defined as
+   follows:
+
+      NON_RLE_SEND_AS_RLE
+         The line of image data is uncompressed prior to calling 
+         DP_SendImageData().  DP_SendImageData() will compress the data and 
+         send it to the Digital Palette as run length encoded.
+
+      NON_RLE
+         The line of image data is uncompressed prior to calling 
+         DP_SendImageData().  DP_SendImageData() will send it to the Digital 
+         Palette uncompressed.
+
+      RLE
+        The line of image data is already compressed prior to calling 
+        DP_SendImageData() and will be sent as run length encoded.  The
+        application is responsible for insuring that the data is in the
+        proper format.  See the "Action Commands" chapter of the
+        "Digital Palette Product Specification" for a description of the
+        required format for Run length Encoding.
+
+==============================================================================
+
+TOOLKIT MACROS BY CATEGORY
+
+   This section describes the categories of DP_DATA structure macros.  A brief
+   discussion of each category should provide an overview of the abilities an
+   application has in controlling and monitoring the Toolkit routines, and by
+   extension, the Digital Palette itself.
+
+-----------------------------------------------------------------------------
+
+ Toolkit/Digital Palette Interface Status
+
+   Interface Status macros are helpful in discriminating between the different
+   kinds of errors and warnings that the Toolkit functions can generate.  All
+   of the values referenced by these macros should be considered READ ONLY
+   by the application.  That is, they are purely status information which is
+   returned by the Toolkit and should not be modified by the application.
+
+   DP_ALL_OKAY               Indicates TRUE if the last Toolkit function
+                             called executed without error.
+
+   DP_CONFIGERROR            Indicates TRUE if DP_InitPrinter() failed to read
+                             the configuration file correctly.
+
+   DP_DPALETTE_INITIALIZED   Indicates TRUE if DP_InitPrinter() successfully
+                             initialized the Digital Palette.
+
+   DP_DPALETTE_ONLINE        Indicates TRUE if the Toolkit functions have
+                             successfully communicated with the Digital
+                             Palette.
+
+   DP_ERROR                  Indicates TRUE if the last Toolkit function
+                             called returned an ERROR.
+
+   DP_ERRORCLASS             Indicates the return value of the last Toolkit
+                             function called.
+
+   DP_ERRORMESSAGE           ASCII string describing the DP_ERRORCLASS.
+
+   DP_ERRORNUMBER            Code number associated with DP_ERRORMESSAGE.
+
+   DP_PORTERROR              Indicates TRUE if the Toolkit functions have
+                             had difficulty communicating with the Digital
+                             Palette through the specified port.
+
+   DP_PRINTERERROR           Indicates TRUE if an error condition exists in
+                             the Digital Palette.
+
+   DP_WARNING                Indicates TRUE if the last Toolkit function
+                             called returned a WARNING.
+
+-----------------------------------------------------------------------------
+
+ Toolkit/Digital Palette Interface Control
+
+   An application can use these Interface Control macros to control how
+   the Toolkit functions communicate with the Digital Palette or to control
+   how the Digital Palette processes data sent to it by the Toolkit functions.
+   The values in this group are READ/WRITE; meaning they can be modified by
+   the application.
+
+   DP_EXP_BUFFER_USAGE       Controls how the Digital Palette stores and
+                             executes commands in it's command buffer.
+
+   DP_EXP_CALIBRATION        Controls how rigorously the Digital Palette
+                             performs auto-calibration before an exposure.
+
+   DP_EXP_IMAGE_USAGE        Controls how the Digital Palette stores and
+                             processes image data.
+
+   DP_IMAGE_COMPRESSION      Controls and specifies how an application's
+                             image data is stored and sent to the Digital
+                             Palette.
+
+   DP_PORT                   Specifies the port through which the Toolkit
+                             functions communicate with the Digital Palette.
+
+   DP_SERVO_MODE             Controls the Digital Palette's adaptive exposure
+                             rate.
+
+   DP_WAITFORBUFFER          Controls Buffer Warning Suppression for any
+                             Toolkit function call.
+
+-----------------------------------------------------------------------------
+
+ Digital Palette Status/Information
+
+   The Status/Information macros describe hardware, firmware, options, and
+   equipment installed in, or attached to the Digital Palette as well as the
+   current operating status of the Digital Palette.  All of the macros in
+   this group are READ ONLY.
+
+   DP_AUTOADVANCE            Indicates TRUE if the film is loaded in a camera
+                             back which automatically ejects or advances when
+                             an exposure is complete.
+
+   DP_BUFFERAVAILABLE        Indicates TRUE if the Digital Palette has enough
+                             buffer space available to accommodate the longest
+                             possible command sent to it.
+
+   DP_CAMERABACK             Code number for the camera back which is attached
+                             to the Digital Palette.
+
+   DP_CAMERADESCRIPTION      ASCII string describing the camera back which is
+                             attached to the Digital Palette.
+
+   DP_ON_BOARD_RAM           Indicates the number of Kilobytes of RAM that is 
+                             installed in the Digital Palette.
+
+   DP_CURRENTCOLOR           Indicates the color filter being used in the
+                             Digital Palette for an exposure in progress.
+
+   DP_EXPOSINGIMAGE          Indicates TRUE if the Digital Palette is exposing
+                             an image.
+
+   DP_EXPOSURE_STATUS        ASCII string describing the current color and
+                             line number being exposed in the Digital Palette.
+
+   DP_FREE_BUFFER            Indicates the number of Kilobytes of command
+                             buffer space that is available in the Digital
+                             Palette.
+
+   DP_IMAGESINQUEUE          Indicates the number of images which are queued
+                             up for exposure in the Digital Palette's command
+                             buffer.
+
+   DP_LINES_EXPOSED          Indicates the number of lines which have been
+                             exposed through filter DP_CURRENTCOLOR.
+
+   DP_MANUALEJECT            Indicates TRUE if the film is loaded in a camera
+                             back which requires the user to manually eject
+                             or remove the film after an exposure is complete.
+
+   DP_MAXHORIZONTALRES       Indicates the maximum horizontal resolution (in
+                             pixels) that the Digital Palette is capable of.
+
+   DP_ROM_VERSION            ASCII string describing the version number of the
+                             firmware installed in the Digital Palette.
+
+   DP_SCSIPORT               Indicates TRUE if the Digital Palette has an
+                             optional SCSI port installed.
+
+   DP_SINGLEIMAGEMODE        Indicates TRUE if the Digital Palette will only
+                             allow 1 (one) image in its command buffer at a
+                             time.
+
+   DP_TOTAL_BUFFER           Indicates the number of Kilobytes of RAM in the
+                             Digital Palette which is allocated for a command
+                             buffer.
+
+-----------------------------------------------------------------------------
+
+ Image Size and Placement
+
+   An application can use these Size and Placement macros to fit an image
+   onto various film formats.  Most of the values associated with these
+   macros are set by the application to control image size and placement.
+   Those which deal with aspect ratio are READ ONLY values.
+
+   DP_ASPECT_RATIO           Indicates the horizontal or vertical dimensions
+                             of a film's aspect ratio. READ ONLY
+
+   DP_HOR_OFFSET             Controls the offset of the image in pixels from
+                             the left side of the image area.
+
+   DP_HOR_RES                Controls the length in pixels of the horizontal
+                             dimension of the image area.
+
+   DP_LINE_LENGTH            Controls the length of a line of image data.
+
+   DP_VER_HEIGHT             Controls the number of lines of image data.
+
+   DP_VER_OFFSET             Controls the offset in pixel lines from the top
+                             of the image area.
+
+   DP_VER_RES                Controls the height in pixels of the vertical
+                             dimension of the image area.
+
+   DP_X_ASPECT               Indicates the horizontal dimension of a film's
+                             aspect ratio.  READ ONLY
+
+   DP_Y_ASPECT               Indicates the vertical dimension of a film's
+                             aspect ratio.  READ ONLY
+
+-----------------------------------------------------------------------------
+
+ Image Exposure Control
+
+   Image Exposure Control macros allow an application to adjust the relative
+   lightness or darkness of an image by controlling the duration and/or
+   brightness that pixels are exposed onto the film.  All of these values
+   are READ/WRITE.  The application sets these values to control color
+   balance and brightness.
+
+   DP_COLOR_BALANCE          RED, GREEN, or BLUE color balance level.
+
+   DP_EXPOSURE_TIME          RED, GREEN, or BLUE exposure time.
+
+   DP_LIGHTEN_DARKEN         Lighten/Darken setting.
+
+   DP_LUMINANT               RED, GREEN, or BLUE luminant setting.
+
+   DP_BLUE_COLOR_BALANCE     BLUE color balance level.
+
+   DP_BLUE_EXP_TIME          BLUE exposure time.
+
+   DP_BLUE_LUMINANT          BLUE luminant setting.
+
+   DP_GREEN_COLOR_BALANCE    GREEN color balance level.
+
+   DP_GREEN_EXP_TIME         GREEN exposure time.
+
+   DP_GREEN_LUMINANT         GREEN luminant setting.
+
+   DP_RED_COLOR_BALANCE      RED color balance level.
+
+   DP_RED_EXP_TIME           RED exposure time.
+
+   DP_RED_LUMINANT           RED luminant setting.
+
+-----------------------------------------------------------------------------
+
+ Film Selection and Identification
+
+    An application can change the film type as well as obtain information
+    about films known to the Digital Palette by using the Film Selection and
+    Identification macros.  The DP_FILMNUMBER macro is used by the
+    application to set the film to be used.  The value associated with this
+    macro is READ/WRITE.  All of the other macros in this group are
+    READ ONLY.
+
+   DP_FILMNUMBER             Indicates the film type for the camera back
+                             attached to the Digital Palette.
+
+   DP_BLACKANDWHITEFILM      Indicates TRUE if the film is Black and White.
+
+   DP_CAMERABACKFILM         Indicates TRUE if the film is appropriate for
+                             the camera back attached to the Digital Palette.
+
+   DP_DEFAULT_FILM           Indicates the current film type for a camera
+                             back.
+
+   DP_FILM_NAME              ASCII string containing the name of the film.
+
+   DP_FILM_PRESENT           Indicates TRUE if the film type is known to the
+                             Digital Palette.
+
+   DP_FILMWASDOWNLOADED      Indicates TRUE if the film was downloaded to the
+                             Digital Palette.
+
+-----------------------------------------------------------------------------
+
+ Image Display Colors
+    This group of macros is used by the application to control the color
+    translation tables which are sent to the Palette as well as the 
+    Background color sweep.  All of these macros are READ/WRITE.
+
+   DP_COLOR_TABLE            Specifies a replacement pixel translation for a
+                             RED, GREEN, or BLUE pixel level.
+
+   DP_RED_COLOR_TABLE        Specifies a replacement pixel translation for a
+                             RED pixel level.
+
+   DP_GREEN_COLOR_TABLE      Specifies a replacement pixel translation for a
+                             GREEN pixel level.
+
+   DP_BLUE_COLOR_TABLE       Specifies a replacement pixel translation for a
+                             BLUE pixel level.
+
+   DP_BACKGROUND_MODE        Controls Digital Palette generation of shaded
+                             backgrounds.
+
+   DP_BACKGROUND_PIX_VALUE   Specifies the pixel level to be replaced with
+                             a shaded background.
+
+   DP_LOWER_LEFT_COLOR       Specifies a RED, GREEN, or BLUE pixel level for
+                             the lower left corner of a shaded background.
+
+   DP_LOWER_RIGHT_COLOR      Specifies a RED, GREEN, or BLUE pixel level for
+                             the lower right corner of a shaded background.
+
+   DP_UPPER_LEFT_COLOR       Specifies a RED, GREEN, or BLUE pixel level for
+                             the upper left corner of a shaded background.
+
+   DP_UPPER_RIGHT_COLOR      Specifies a RED, GREEN, or BLUE pixel level for
+                             the upper right corner of a shaded background.
+
+==============================================================================
+
+ALPHABETICAL LISTING OF TOOLKIT MACROS
+
+ DP_ALL_OKAY(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the last Toolkit routine called
+                     returned successfully.
+
+    Possible Values:
+                     TRUE  if the current error classification indicates
+                           NOERROR.
+                     FALSE if any error or warning.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_ASPECT_RATIO(dp, f, XorY)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Aspect ratio film type.
+                     int         XorY  X or Y component of Aspect Ratio:
+                                             0 = X (horizontal component)
+                                             1 = Y (vertical component)
+
+                Use:
+                     Specifies horizontal or vertical component of the
+                     Aspect Ratio for film type f.
+
+    Possible Values:
+                     Non-zero, Positive value.
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument XorY is an index to a 2 byte array 
+                     containing the aspect ratio for film type f.
+
+                     This value is correct for film type f after a successful
+                     return from DP_InitPrinter().
+
+                     An application should not modify this value.
+
+                     This value may be modified when an application calls
+                     DP_GetPrinterStatus() with the inquiry argument set
+                     to INQ_FILMS.
+
+    Additional Info:
+                     Inquire Aspect Ratio command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_GetPrinterStatus() function call.
+
+-----------------------------------------------------------------------------
+ DP_AUTOADVANCE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the currently attached camera back
+                     is capable of automatically ejecting or advancing the 
+                     film after an exposure.
+
+    Possible Values:
+                     TRUE  if the attached camera back is motorized and
+                           is capable of advancing or ejecting the film
+                           after it has been exposed.
+                     FALSE if the attached camera back requires the user
+                           to remove the film after an exposure.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Digital Palette, Product Specification
+
+-----------------------------------------------------------------------------
+ DP_BACKGROUND_MODE(dp) 
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the Background Mode parameter sent to the
+                     Digital Palette when a Set Background command is issued.
+
+    Possible Values:
+                     NO_BACKGROUND     (0) => Background Mode OFF
+                     BACKGROUND_LINEAR (1) => Linear Interpolation
+                                              Background Mode
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is initialized to zero (OFF) DP_InitPrinter()
+                     is called.
+
+                     When this value is set to non-zero, it should be modified
+                     in conjunction with these other Macros:
+                        DP_BACKGROUND_PIX_VALUE,
+                        DP_UPPER_LEFT_COLOR,
+                        DP_UPPER_RIGHT_COLOR,
+                        DP_LOWER_LEFT_COLOR,
+                        DP_LOWER_RIGHT_COLOR.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Background command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+----------------------------------------------------------------------------
+ DP_BACKGROUND_PIX_VALUE(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the pixel level parameter sent to the Digital
+                     Palette when a Set Background command is issued.  It is
+                     this pixel value which will be replaced by a background
+                     sweep.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is initialized to zero (OFF) DP_InitPrinter()
+                     is called.
+
+                     When this value is set to non-zero, it should be modified
+                     in conjunction with these other Macros:
+                        DP_BACKGROUND_MODE,
+                        DP_UPPER_LEFT_COLOR,
+                        DP_UPPER_RIGHT_COLOR,
+                        DP_LOWER_LEFT_COLOR,
+                        DP_LOWER_RIGHT_COLOR.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Background command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_BLACKANDWHITEFILM(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type.
+
+                Use:
+                     Determines whether film type f is a Black and White film.
+
+    Possible Values:
+                     TRUE  if film type f is Black and White.
+                     FALSE if film type f is Color.
+
+          Data Type:
+                     int
+
+           Comments:
+                     This macro is a test of the contents of macro
+                     DP_FILM_NAME and its value is not intended to be
+                     modified.
+
+    Additional Info:
+                     Macro DP_FILM_NAME.
+
+-----------------------------------------------------------------------------
+ DP_BLUE_COLOR_BALANCE(dp)  
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies color balance parameter sent to the Digital
+                     Palette when a Set Color Balance command is issued with
+                     the color parameter set to 2 (blue).
+
+    Possible Values:
+                     0 => Darkest
+                     1 => Darker
+                     2 => Dark
+                     3 => Normal
+                     4 => Light
+                     5 => Lighter
+                     6 => Lightest
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_COLOR_BALANCE except that it
+                     only specifies the BLUE exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Balance command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_BLUE_COLOR_TABLE(dp, l) 
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         l     Index to BLUE color table level
+
+                Use:
+                     Specifies one of 256 BLUE color table level parameters
+                     sent to the Digital Palette when the Set Color Table
+                     command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_COLOR_TABLE except that it
+                     only specifies levels in the BLUE color table.
+
+                     The BLUE color table is initialized to be linear,
+                     (ie. level 0 = 0, level 255 = 255) when DP_InitPrinter()
+                     is called.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Table command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_BLUE_EXP_TIME(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies exposure parameter sent to the Digital Palette
+                     when a Set Exposure Time command is issued with the
+                     color parameter set to 2 (blue).
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_EXPOSURE_TIME except that it
+                     only specifies the BLUE exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Exposure Time command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_BLUE_LUMINANT(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies luminant parameter sent to the Digital Palette
+                     when a Set Luminant command is issued with the color
+                     parameter set to 2 (blue).
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_LUMINANT except that it only
+                     specifies the BLUE exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Luminant command in Detailed Command Descriptions of
+                     Digital Palette Parallel Port Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_BUFFERAVAILABLE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine whether the Digital Palette has enough
+                     buffer space available to accept the longest possible
+                     command.
+
+    Possible Values:
+                     1 (one) if there is room in the Digital Palette buffer
+                             for another command.
+                     0 (zero) if the Digital Palette has no available buffer.
+
+          Data Type:
+                     char
+
+            Summary:
+                     Value of bit 0, byte 0 of the message bytes received
+                     after an Inquire Status command is issued to the Digital
+                     Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_CAMERABACK(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine what kind of camera back is attached
+                     to the Digital Palette.
+
+    Possible Values:
+                     CAMERA_PACK   (0)   Pack Film camera back attached.
+                     CAMERA_35MM   (1)   35mm camera back attached.
+                     CAMERA_AUTO   (2)   Auto Film camera back attached.
+                     CAMERA_4X5    (3)   4x5 Film camera back attached.
+
+          Data Type:
+                     char
+
+            Summary:
+                     Translation of byte 0 of the message bytes received
+                     after an Inquire Camera command is issued to the Digital
+                     Palette.
+
+    Additional Info:
+                     Inquire Camera command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_CAMERABACKFILM(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type.
+
+                Use:
+                     Determines whether film type f is appropriate for the
+                     camera back currently attached to the Digital Palette.
+
+    Possible Values:
+                     TRUE  if film type f is appropriate.
+                     FALSE if film type f is inappropriate.
+
+          Data Type:
+                     int
+
+           Comments:
+                     This macro is a test for the contents in macro
+                     DP_FILM_NAME and its value is not intended to be
+                     modified.
+
+    Additional Info:
+                     Macro DP_FILM_NAME.
+
+-----------------------------------------------------------------------------
+ DP_CAMERADESCRIPTION(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used as a humanly readable message describing the camera
+                     back attached to the Digital Palette.
+
+    Possible Values:
+                     Null terminated string describing the camera back
+                     attached to the Digital Palette.
+
+          Data Type:
+                     char *
+
+            Summary:
+                     Bytes 1 through total bytes received after an Inquire
+                     Camera command is issued to the Digital Palette.
+                     This string, including the null termination, will 
+                     not exceed CAMERA_NAME_SIZE in length.
+
+    Additional Info:
+                     Inquire Camera command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_CAMERA_ADJUST(dp, f, XYorZ)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type to receive this adjustment
+                     int         XYorZ Adjustment parameter where:
+                                          0 = x offset
+                                          1 = y offset
+                                          2 = zoom
+
+                Use:
+                     Specifies X offset, Y offset, or Zoom Camera Adjustment
+                     for film type f.
+
+    Possible Values:
+                     Minimum => -40 (X and Y offsets)
+                                -50 (Zoom)
+                     Maximum =>  40 (X and Y offsets)
+                                 80 (Zoom)
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument XYorZ is an index into a 3 byte array of
+                     the Camera Adjust parameters sent to the Digital Palette
+                     along with macro argument f when a Set Camera Adjustment
+                     command is issued.
+
+                     This value is read in from the configuration file.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Camera Adjust command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_CAMERA_ADJUST_X(dp, f)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type to receive this adjustment
+
+                Use:
+                     Specifies X offset Camera Adjustment for film type f.
+
+    Possible Values:
+                     Minimum => -40
+                     Maximum =>  40
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_CAMERA_ADJUST except that it
+                     only specifies the X offset value.
+
+                     This value is read in from the configuration file.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Camera Adjust command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_CAMERA_ADJUST_Y(dp, f)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type to receive this adjustment
+
+                Use:
+                     Specifies Y offset Camera Adjustment for film type f.
+
+    Possible Values:
+                     Minimum => -40
+                     Maximum =>  40
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_CAMERA_ADJUST except that it
+                     only specifies the Y offset value.
+
+                     This value is read in from the configuration file.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Camera Adjust command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_CAMERA_ADJUST_Z(dp, f)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type to receive this adjustment
+
+                Use:
+                     Specifies Zoom Camera Adjustment for film type f.
+
+    Possible Values:
+                     Minimum => -50
+                     Maximum =>  80
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_CAMERA_ADJUST except that it
+                     only specifies the Zoom value.
+
+                     This value is read in from the configuration file.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Camera Adjust command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_COLOR_BALANCE(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+                Use:
+                     Specifies the color and color balance parameters sent
+                     to the Digital Palette when a Set Color Balance command
+                     is issued.
+
+    Possible Values:
+                     0 => Darkest
+                     1 => Darker
+                     2 => Dark
+                     3 => Normal
+                     4 => Light
+                     5 => Lighter
+                     6 => Lightest
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     color balance values for the three possible colors.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Balance command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_COLOR_TABLE(dp, c, l)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+
+                     int         l     Index to color table level
+
+                Use:
+                     Specifies one of 256 color table level parameters sent
+                     to the Digital Palette with color table c when a Set
+                     Color Table command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c points to one of three (red, green and
+                     blue) 256 byte arrays of color table levels.
+
+                     All three color tables are initialized to be linear
+                     (ie. level 0 = 0, level 255 = 255) when DP_InitPrinter()
+                     is called.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Table command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_CONFIGERROR(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the last Toolkit routine called
+                     returned a configuration file related error.
+
+    Possible Values:
+                     TRUE  if the current error classification is CONFIGERR
+                     FALSE if any other error classification.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_CURRENTCOLOR(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine which color is being exposed onto film.
+
+    Possible Values:
+                     0 = Red
+                     1 = Green
+                     2 = Blue
+                     3 = No exposure in progress
+
+          Data Type:
+                     char
+
+            Summary:
+                     Value of bits 5 & 6, byte 1 of the message bytes received
+                     after an Inquire Status command is issued to the Digital
+                     Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_DEFAULT_FILM(dp, c)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Camera back code.
+
+                Use:
+                     Specifies current film type for camera back c.
+
+    Possible Values:
+                     0  through (MAX_NUM_FILMS - 1) (19) if film is defined
+                        for camera back c.
+                     -1 if film type for camera back c is undefined.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is read in from the configuration file.
+
+                     Macro argument c is an index into a 4 byte array of
+                     default film types for the four possible camera backs.
+
+                     If this value needs to be modified, Polaroid suggests
+                     using macro DP_FILMNUMBER.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Macro DP_CAMERABACK.
+
+                     Macro DP_FILMNUMBER.
+
+-----------------------------------------------------------------------------
+ DP_DEVICE_NAME(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used as a humanly readable description of the printer
+                     product.
+
+    Possible Values:
+                     "Digital Palette"
+
+          Data Type:
+                     char[24]
+
+           Comments:
+                     This string is read in from the configuration file.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_DPALETTE_INITIALIZED(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the Digital Palette has been
+                     properly initialized.
+
+    Possible Values:
+                     TRUE  if the Digital Palette has been properly initial-
+                           ized via a call to DP_InitPrinter().
+                     FALSE if the Digital Palette interface routines 
+                           determine that the Digital Palette has not been
+                           properly initialized.
+
+          Data Type:
+                     char
+
+    Additional Info:
+                     Initialization Procedure section of Digital Palette
+                     Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_DPALETTE_ONLINE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+          Data Type:
+                     char
+
+            Summary:
+
+    Possible Values:
+                     TRUE  if the Toolkit interface routines found and
+                           established successful communications with the
+                           Digital Palette.
+                     FALSE if the Toolkit interface routines could not find
+                           the Digital Palette.
+
+
+-----------------------------------------------------------------------------
+ DP_ERROR(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the last Toolkit routine called
+                     returned any kind of error.
+
+    Possible Values:
+                     TRUE  if the current error classification indicates
+                           an error, ie. LOGICERR, HARDWERR, TIMEOUT,
+                           DISCONNECTED, UNKNOWNPORT, CONFIGERR, or
+                           DPTOOLKITERR.
+                     FALSE if warning or no errors.
+
+          Data Type:
+                     int
+
+            Summary:
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_ERRORCLASS(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine the Error/Warning classification return
+                     value of the last Toolkit routine called by a host 
+                     application.
+
+    Possible Values:
+                         1  BUFFERWARNING Buffer Unavailable Warning.
+                         2  EXPOSUREACTIVE Active Exposure Warning.
+                         3  REMOVEFILM Remove Film Warning.
+                         0  NOERROR No Error or Warning.  Everything is Okay.
+                        -1  LOGICERR Synchronous/Logic Error.
+                        -2  HARDWERR Asynchronous/Hardware Error.
+                        -3  TIMEOUT Communications Error.
+                        -4  DISCONNECTED Communications Error.
+                        -5  UNKNOWNPORT Communications Error.
+                        -6  CONFIGERR Configuration File Error.
+                        -7  DPTOOLKITERR Toolkit Usage Error.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_ERRORMESSAGE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used as a humanly readable description of the current
+                     error or warning status.
+
+    Possible Values:
+                     Null terminated string describing the current error or
+                     warning condition which exists.
+
+          Data Type:
+                     char *
+
+    Additional Info:
+
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_ERRORNUMBER(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used as an error code in conjunction with the error 
+                     message.
+
+    Possible Values:
+                     Specific error code; non-printable ASCII value.
+
+          Data Type:
+                     char
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_EXPOSINGIMAGE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine whether the Digital Palette is exposing
+                     an image.
+
+    Possible Values:
+                     1 (one)  if the Digital Palette is exposing an image.
+                     0 (zero) if the Digital Palette is not exposing an image.
+
+          Data Type:
+                     char
+
+            Summary:
+                     Value of bit 1, byte 0 of the message bytes received
+                     after an Inquire Status command is issued to the Digital
+                     Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_EXPOSURE_STATUS(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used as a humanly readable message describing the current
+                     line and color being exposed onto film.
+
+    Possible Values:
+                     Null terminated string, expressing color and lines
+                     exposed, ie. Red, 25 lines.  This string will have
+                     zero length if the Digital Palette is not exposing
+                     an image.
+
+          Data Type:
+                     char *
+
+            Summary:
+                     Bytes 4 through the total of bytes received after an
+                     Inquire Status command is issued to the Digital Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_EXPOSURE_TIME(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+                Use:
+                     Specifies the color and exposure parameters sent to the
+                     Digital Palette when a Set Exposure Time command is
+                     issued.
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     exposure times for the three possible colors.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Exposure Time command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_EXP_BUFFER_USAGE(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as the buffer usage parameter to
+                     the Digital Palette when the Start Exposure command is
+                     issued.
+
+    Possible Values:
+                     SE_BUF_AS_RECVD   (0) => Normal Buffer Usage.
+                     SE_BUF_FULL_COLOR (1) => Buffer entire image before 
+                                              exposure starts.
+                     SE_BUF_FULL_IMAGE (2) => Buffer entire color plane 
+                                              before exposure starts.
+                     SE_BUFF_OFF       (3) => Disable buffer.  This mode
+                                              is NOT recommended.  It is
+                                              for test purposes only.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is read in from the configuration file.
+
+                     If this value is non-zero, the Digital Palette disables
+                     Adaptive Servo until the exposure is complete.
+
+                     This value is sent to the Digital Palette when a call
+                     to DP_StartExposure() is made.
+                     
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Start Exposure command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_StartExposure() function call.
+
+-----------------------------------------------------------------------------
+ DP_EXP_CALIBRATION(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as the calibration parameter to
+                     the Digital Palette when the Start Exposure command is
+                     issued.
+
+    Possible Values:
+                     SE_NORMAL_CALIBRATION (0) => Normal.
+                                            Palette calibrates and verifies.
+                     SE_CAL_NO_CHECK       (1) => Calibration performed
+                                            without verification.
+                     SE_NO_CAL_USE_OLD     (2) => RESERVED by Polaroid.
+                     SE_NO_CAL             (3) => Digital Palette does not 
+                                            calibrate before exposing.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is read in from the configuration file.
+
+                     This value is sent to the Digital Palette when a call
+                     to DP_StartExposure() is made.
+                     
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Start Exposure command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_StartExposure() function call.
+
+-----------------------------------------------------------------------------
+ DP_EXP_IMAGE_USAGE(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as the image usage parameter to
+                     the Digital Palette when the Start Exposure command is
+                     issued.
+
+    Possible Values:
+                     SE_ALLOW_MULTIPLE_IMAGES  (0) =>
+                          Digital Palette automatically selects Single Image
+                          mode when a non-motorized camera back is attached or
+                          Multiple Image mode when a motorized camera back is
+                          attached.
+
+                     SE_ALLOW_ONE_IMAGE_IN_BUF  (1) =>
+                          Forces the Digital Palette into Single Image mode
+                          regardless of the type of camera back that is
+                          attached.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is read in from the configuration file.
+
+                     Normally, this value should be 0 (zero).
+                     
+                     This value is sent to the Digital Palette when a call
+                     to DP_StartExposure() is made.
+                     
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Start Exposure command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_StartExposure() function call.
+
+----------------------------------------------------------------------------
+ DP_FILMNUMBER(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies film type for the camera back currently
+                     attached to the Digital Palette.
+
+    Possible Values:
+                     0 through (MAX_NUM_FILMS - 1) (19) for valid film type.
+                     -1 if film type for camera back undefined.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value is read in from the configuration file.
+
+                     This macro is the same as:
+                        DP_DEFAULT_FILM(dp, f, DP_CAMERABACK(dp))
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     Macro DP_CAMERABACK.
+
+                     Macro DP_DEFAULT_FILM.
+
+-----------------------------------------------------------------------------
+ DP_FILMWASDOWNLOADED(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Film type.
+
+                Use:
+                     Determines whether film type f was downloaded from disk
+                     to the Digital Palette.
+
+    Possible Values:
+                     TRUE  if film type f is a downloaded film.
+                     FALSE if film type f is stored in the Digital Palette's
+                           ROM.
+
+          Data Type:
+                     int
+
+           Comments:
+                     This macro is a test of the contents of macro
+                     DP_FILM_NAME and its value is not intended to be
+                     modified.
+
+    Additional Info:
+                     Macro DP_FILM_NAME.
+
+-----------------------------------------------------------------------------
+ DP_FILM_NAME(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                     int         f     Film type
+
+                Use:
+                     Name known to the Digital Palette as film type f.
+
+    Possible Values:
+                     Null terminated ASCII string.
+
+          Data Type:
+                     char[ USER_FILM_NAME_SIZE ]
+
+           Comments:
+                     This string is read in from the configuration file.
+
+                     An application should not modify the contents of this
+                     string.
+
+                     This string may be modified when an application calls
+                     DP_GetPrinterStatus() with the inquiry argument set
+                     to INQ_FILMS.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Inquire Film Name command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_GetPrinterStatus() function call.
+
+-----------------------------------------------------------------------------
+ DP_FILM_PRESENT(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                     int         f     Film type
+
+                Use:
+                     Determines whether film type f is known to the Digital
+                     Palette.
+
+    Possible Values:
+                     TRUE  if film type f exists.
+                     FALSE if film type f does not exist.
+
+          Data Type:
+                     int
+
+           Comments:
+                     This macro tests the contents of macro
+                     DP_FILM_NAME and its value is not intended to be
+                     modified.
+
+    Additional Info:
+                     Macro DP_FILM_NAME.
+
+-----------------------------------------------------------------------------
+ DP_FREE_BUFFER(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine how much of the Digital Palette's
+                     command buffer space is free and available.
+
+    Possible Values:
+                     Number of K bytes available in the Digital Palette
+                     command buffer.
+
+          Data Type:
+                     int
+            Summary:
+                     Integer value of bytes 0 & 1 of the message bytes 
+                     received after an Inquire Buffer command is issued to the
+                     Digital Palette.
+
+    Additional Info:
+                     Inquire Buffer command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_GREEN_COLOR_BALANCE(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies color balance parameter sent to the Digital
+                     Palette when a Set Color Balance command is issued with
+                     the color parameter set to 1 (green).
+
+    Possible Values:
+                     0 => Darkest
+                     1 => Darker
+                     2 => Dark
+                     3 => Normal
+                     4 => Light
+                     5 => Lighter
+                     6 => Lightest
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_COLOR_BALANCE except that it
+                     only specifies the GREEN exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Balance command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_GREEN_COLOR_TABLE(dp, l)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         l     Index to GREEN color table level
+
+                Use:
+                     Specifies one of 256 GREEN color table level parameters
+                     sent to the Digital Palette when the Set Color Table
+                     command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_COLOR_TABLE except that it
+                     only specifies levels in the GREEN color table.
+
+                     The GREEN color table is initialized to be linear
+                     (ie. level 0 = 0, level 255 = 255) when DP_InitPrinter()
+                     is called.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Table command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_GREEN_EXP_TIME(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Sets the exposure parameter sent to the Digital Palette
+                     when a Set Exposure Time command is issued with the
+                     color parameter set to 1 (green).
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_EXPOSURE_TIME except that it
+                     only specifies the GREEN exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Exposure Time command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_GREEN_LUMINANT(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Sets the luminant parameter sent to the Digital Palette
+                     when a Set Luminant command is issued with the color
+                     parameter set to 1 (green).
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_LUMINANT except that it only
+                     specifies the GREEN exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Luminant command in Detailed Command Descriptions of
+                     Digital Palette Parallel Port Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_HOR_OFFSET(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Horizontal Offset command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => DP_HOR_RES minus DP_LINE_LENGTH
+
+          Data Type:
+                     int
+
+           Comments:
+                     This value is read in from the configuration file.
+                     
+                     Normally, this value is modified in conjunction with
+                     these other Macros:  DP_HOR_RES, DP_LINE_LENGTH,
+                     DP_VER_RES, DP_VER_HEIGHT, DP_VER_OFFSET.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Horizontal Offset command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_HOR_RES(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Horizontal Resolution command is
+                     issued.
+
+    Possible Values:
+                     Minimum => 256
+                     Maximum => DP_MAXHORIZONTALRES
+
+          Data Type:
+                     int
+
+           Comments:
+                     This value is read in from the configuration file as a
+                     user-specified default.  An application may modify this
+                     value at run time to expose an image at some other
+                     resolution.
+
+                     Normally, this value is modified in conjunction with
+                     these other Macros:  DP_LINE_LENGTH, DP_HOR_OFFSET,
+                     DP_VER_RES, DP_VER_HEIGHT, DP_VER_OFFSET.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Horizontal Resolution command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_IMAGESINQUEUE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine how many images are in the Digital
+                     Palette command queue.
+
+    Possible Values:
+                     Number of images in Digital Palette command queue.
+
+          Data Type:
+                     char
+
+            Summary:
+                     Value of bits 0 through 4, byte 1 of the message bytes
+                     received after an Inquire Status command is issued to
+                     the Digital Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_IMAGE_COMPRESSION(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies how image data is passed to DP_SendImageData()
+                     and how DP_SendImageData() will send the image data to
+                     the Digital Palette.
+
+    Possible Values:
+                     NON_RLE_SEND_AS_RLE => Uncompressed data will be
+                        sent to the Digital Palette Run Length Encoded.
+                     NON_RLE             => Uncompressed data will be
+                        sent to the Digital Palette uncompressed.
+                     RLE                 => Run Length Encoded data will
+                        sent to the Digital Palette Run Length Encoded.
+
+                     These values are defined in the DPALETTE.H include file.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value may be modified any time prior to calling
+                     DP_SendImageData().
+
+    Additional Info:
+                     Run Length Encoding, this document.
+
+                     DP_SendImageData() function call.
+
+-----------------------------------------------------------------------------
+ DP_LIGHTEN_DARKEN(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Lighten/Darken command is issued.
+
+    Possible Values:
+                     0 => Darkest
+                     1 => Darker
+                     2 => Dark
+                     3 => Normal
+                     4 => Light
+                     5 => Lighter
+                     6 => Lightest
+
+          Data Type:
+                     char
+           Comments:
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Lighten/Darken command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_LINES_EXPOSED(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine which image line is being exposed onto
+                     film.
+
+    Possible Values:
+                     Current line number being exposed.
+
+          Data Type:
+                     int
+
+            Summary:
+                     Integer value of bytes 2 & 3 of the message bytes
+                     received after an Inquire Status command is issued to the
+                     Digital Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_LINE_LENGTH(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Line Length command is issued.
+
+    Possible Values:
+                     Minimum => 1
+                     Maximum => DP_HOR_RES minus DP_HOR_OFFSET
+
+          Data Type:
+                     int
+
+           Comments:
+                     This value is read in from the configuration file.
+                     
+                     Normally, this value is modified in conjunction with
+                     these other Macros:  DP_HOR_RES, DP_HOR_OFFSET,
+                     DP_VER_RES, DP_VER_HEIGHT, DP_VER_OFFSET.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Line Length command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_LOWER_LEFT_COLOR(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+
+                Use:
+                     Specifies the red, green, or blue lower left corner color
+                     parameter sent to the Digital Palette when a Set 
+                     Background command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     the color components of the lower left corner color.
+
+
+                     This value is initialized to zero (OFF) DP_InitPrinter()
+                     is called.
+
+                     When this value is set to non-zero, it should be modified
+                     in conjunction with these other Macros:
+                        DP_BACKGROUND_MODE,
+                        DP_BACKGROUND_PIX_VALUE,
+                        DP_UPPER_LEFT_COLOR,
+                        DP_UPPER_RIGHT_COLOR,
+                        DP_LOWER_RIGHT_COLOR.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Background command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_LOWER_RIGHT_COLOR(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+
+                Use:
+                     Specifies the red, green, or blue lower right corner
+                     color parameter sent to the Digital Palette when a Set
+                     Background command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     the color components of the lower right corner color.
+
+                     This value is initialized to zero (OFF) DP_InitPrinter()
+                     is called.
+
+                     When this value is set to non-zero, it should be modified
+                     in conjunction with these other Macros:
+                        DP_BACKGROUND_MODE,
+                        DP_BACKGROUND_PIX_VALUE,
+                        DP_UPPER_LEFT_COLOR,
+                        DP_UPPER_RIGHT_COLOR,
+                        DP_LOWER_LEFT_COLOR.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Background command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_LUMINANT(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+                Use:
+                     Specifies the color and luminant parameters sent to the
+                     Digital Palette when a Set Luminant command is issued.
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     luminant values for the three possible colors.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Luminant command in Detailed Command Descriptions of
+                     Digital Palette Parallel Port Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_MANUALEJECT(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the currently attached camera back
+                     is a type which requires the user to manually eject
+                     the film after an exposure.
+
+    Possible Values:
+                     TRUE  if the attached camera back requires the user
+                           to remove the film after an exposure.
+                     FALSE if the attached camera back is motorized and
+                           is capable of advancing or ejecting the film
+                           after it has been exposed.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Digital Palette, Product Specification
+
+-----------------------------------------------------------------------------
+ DP_MAXHORIZONTALRES(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine the maximum horizontal resolution of
+                     the Digital Palette.
+
+    Possible Values:
+                     2048 typically max for Digital Palette CI-3000 model.
+                     4096 typically max for Digital Palette CI-5000 model.
+
+          Data Type:
+                     int
+
+            Summary:
+                     Translation of the meaning of bit 0, byte 0 of the
+                     message bytes received after an Inquire Options command
+                     is issued to the Digital Palette.
+
+    Additional Info:
+                     Inquire Options command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_ON_BOARD_RAM(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine the amount of RAM (in K bytes) which is
+                     installed in the Digital Palette.
+
+    Possible Values:
+                     128 typically in Digital Palette CI-3000 model.
+                     640 typically in Digital Palette CI-5000 model.
+
+          Data Type:
+                     int
+
+            Summary:
+                     Translation of the meaning of bit 1, byte 0 of the
+                     message bytes received after an Inquire Options command
+                     is issued to the Digital Palette.
+
+    Additional Info:
+                     Inquire Options command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_PORT(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Identifies the port used for communications to the
+                     Digital Palette.  This value should only be modified
+                     by an application via a call to DP_InitPrinter().
+
+    Possible Values:
+                     1 through 3, depending upon how many parallel ports
+                     are known to the computer.
+
+          Data Type:
+                     int
+
+           Comments:
+                     This value is read in from the configuration file.
+                     
+                     If another parallel port is to be used, an application
+                     should call DP_InitPrinter().
+                     
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+-----------------------------------------------------------------------------
+ DP_PORTERROR(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the last Toolkit routine called
+                     returned a parallel port related error.
+
+    Possible Values:
+                     TRUE  if the current error classification is TIMEOUT,
+                           DISCONNECTED, or UNKNOWNPORT.
+                     FALSE if any other error classification.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_PRINTERERROR(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the last Toolkit routine called
+                     returned an error which was set by the Digital Palette.
+
+    Possible Values:
+                     TRUE  if the current error classification is LOGICERR
+                           or HARDWERR.
+                     FALSE if any other error classification.
+
+          Data Type:
+                     int
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_RED_COLOR_BALANCE(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies color balance parameter sent to the Digital
+                     Palette when a Set Color Balance command is issued with
+                     the color parameter set to 0 (red).
+
+    Possible Values:
+                     0 => Darkest
+                     1 => Darker
+                     2 => Dark
+                     3 => Normal
+                     4 => Light
+                     5 => Lighter
+                     6 => Lightest
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_COLOR_BALANCE except that it
+                     only specifies the RED exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Balance command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_RED_COLOR_TABLE(dp, l)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         l     Index to RED color table level
+
+                Use:
+                     Specifies one of 256 RED color table level parameters
+                     sent to the Digital Palette when the Set Color Table
+                     command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_COLOR_TABLE except that it
+                     only specifies levels in the RED color table.
+
+                     The RED color table is initialized to be linear
+                     (ie. level 0 = 0, level 255 = 255) when DP_InitPrinter()
+                     is called.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Color Table command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_RED_EXP_TIME(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies exposure parameter sent to the Digital Palette
+                     when a Set Exposure Time command is issued with the
+                     color parameter set to 0 (red).
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_EXPOSURE_TIME except that it
+                     only specifies the RED exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Exposure Time command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_RED_LUMINANT(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies luminant parameter sent to the Digital Palette
+                     when a Set Luminant command is issued with the color
+                     parameter set to 0 (red).
+
+    Possible Values:
+                     Minimum => 50  (50% normal)
+                     Maximum => 200 (200% normal)
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_LUMINANT except that it only
+                     specifies the RED exposure time value.
+
+                     This value is read in from the configuration file.
+                     
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Luminant command in Detailed Command Descriptions of
+                     Digital Palette Parallel Port Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_ROM_VERSION(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used as a humanly readable message describing the version
+                     of the firmware installed in the Digital Palette.
+
+          Data Type:
+                     char *
+
+            Summary:
+
+                     Bytes 1 through 11 of the message bytes received after an
+                     Inquire Options command is issued to the Digital Palette.
+
+    Possible Values:
+                     Null terminated string describing the revision number
+                     of the firmware installed in the Digital Palette, ie.
+                     VERSION XXX where XXX are three ASCII digits.
+
+    Additional Info:
+                     Inquire Options command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_SCSIPORT(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if there is an optional SCSI port
+                     installed in the Digital Palette.
+
+    Possible Values:
+                     1 (one)  if there is an optional SCSI port installed.
+                              Typical of Digital Palette CI-5000 model.
+                     0 (zero) if there is no SCSI port.
+                              Typical of Digital Palette CI-3000 model.
+
+          Data Type:
+                     char
+
+            Summary:
+                     Translation of the meaning of bit 2, byte 0 of the
+                     message bytes received after an Inquire Options command
+                     is issued to the Digital Palette.
+
+    Additional Info:
+                     Inquire Options command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_SERVO_MODE(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the Adaptive Servo method.
+
+    Possible Values:
+                     SERVO_OFF     (0) => Servo OFF.
+                     SERVO_DELAY   (1) => Delay start.
+                                    Do not alter exposure rate.
+                     SERVO_STATIC  (2) => Delay start.
+                                    Alter exposure rate statically.
+                     SERVO_DYNAMIC (3) => Delay start.
+                                    Alter exposure rate dynamically.
+                     SERVO_FULL    (4) => Full Servo.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This value represents a servo parameter which is sent
+                     with the Set Servo command when DP_SendPrinterParams()
+                     is called.
+
+                     Centronics:
+                     This value is initialized to DEFAULT_SERVO when
+                     DP_InitPrinter() is called.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Servo Mode command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_SINGLEIMAGEMODE(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine whether the Digital Palette will accept
+                     one image at a time in its image queue.
+
+    Possible Values:
+                     1 (one)  if the Digital Palette allows only one image
+                              in the command queue.
+                     0 (zero) if the Digital Palette can accept multiple
+                              images in the command queue.
+
+          Data Type:
+                     char
+
+            Summary:
+                     Value of bit 2, byte 0 of the message bytes received
+                     after an Inquire Status command is issued to the Digital
+                     Palette.
+
+    Additional Info:
+                     Inquire Status command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_TOOLKIT_VERSION(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine what version of the Digital Palette
+                     Toolkit interface is being used.
+
+    Possible Values:
+                     Null terminated string describing the Toolkit version.
+
+          Data Type:
+                     char *
+
+-----------------------------------------------------------------------------
+ DP_TOTAL_BUFFER(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine how much of the Digital Palette's
+                     installed RAM is available for use as a command buffer.
+
+    Possible Values:
+                     Number of K bytes total in the Digital Palette command
+                     buffer.
+
+          Data Type:
+                     int
+
+            Summary:
+                     Integer value of bytes 2 & 3 of the message bytes
+                     received after an Inquire Buffer command is issued to the
+                     Digital Palette.
+
+    Additional Info:
+                     Inquire Buffer command in Detailed Command Descriptions
+                     section of Digital Palette Parallel Port Specifications.
+
+-----------------------------------------------------------------------------
+ DP_UPPER_LEFT_COLOR(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+
+                Use:
+                     Specifies the red, green, or blue upper left corner color
+                     parameter sent to the Digital Palette when a Set 
+                     Background command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     the color components of the upper left corner color.
+
+
+                     This value is initialized to zero (OFF) DP_InitPrinter()
+                     is called.
+
+                     When this value is set to non-zero, it should be modified
+                     in conjunction with these other Macros:
+                        DP_BACKGROUND_MODE,
+                        DP_BACKGROUND_PIX_VALUE,
+                        DP_UPPER_RIGHT_COLOR,
+                        DP_LOWER_LEFT_COLOR,
+                        DP_LOWER_RIGHT_COLOR.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Background command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_UPPER_RIGHT_COLOR(dp, c)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                     int         c     Infers Color where:
+                                         0 = red
+                                         1 = green
+                                         2 = blue
+
+                Use:
+                     Specifies the red, green, or blue upper right corner
+                     color parameter sent to the Digital Palette when a Set
+                     Background command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => 255
+
+          Data Type:
+                     char
+
+           Comments:
+                     Macro argument c is an index into a 3 byte array of
+                     the color components of the upper right corner color.
+
+
+                     This value is initialized to zero (OFF) DP_InitPrinter()
+                     is called.
+
+                     When this value is set to non-zero, it should be modified
+                     in conjunction with these other Macros:
+                        DP_BACKGROUND_MODE,
+                        DP_BACKGROUND_PIX_VALUE,
+                        DP_UPPER_LEFT_COLOR,
+                        DP_LOWER_LEFT_COLOR,
+                        DP_LOWER_RIGHT_COLOR.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Background command in Detailed Command Descriptions
+                     of Digital Palette Parallel Port Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_VER_HEIGHT(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Vertical Height command is issued.
+
+    Possible Values:
+                     Minimum => 1
+                     Maximum => DP_VER_RES minus DP_VER_OFFSET
+
+          Data Type:
+                     int
+
+           Comments:
+                     Normally, this value is modified in conjunction with
+                     these other Macros:  DP_HOR_RES, DP_LINE_LENGTH,
+                     DP_HOR_OFFSET, DP_VER_RES, DP_VER_OFFSET.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Set Vertical Height command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_VER_OFFSET(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Vertical Offset command is issued.
+
+    Possible Values:
+                     Minimum => 0
+                     Maximum => DP_VER_RES minus DP_VER_HEIGHT
+
+          Data Type:
+                     int
+
+           Comments:
+                     This value is read in from the configuration file.
+                     
+                     Normally, this value is modified in conjunction with
+                     these other Macros:  DP_HOR_RES, DP_LINE_LENGTH,
+                     DP_HOR_OFFSET, DP_VER_RES, DP_VER_HEIGHT.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Vertical Offset command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_VER_RES(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value sent as a parameter to the Digital
+                     Palette when a Set Vertical Resolution command is issued.
+
+    Possible Values:
+                     Minimum => 200
+                     Maximum => 3600
+
+          Data Type:
+                     int
+
+           Comments:
+                     This value is read in from the configuration file.
+                     
+                     Normally, this value is modified in conjunction with
+                     these other Macros:  DP_HOR_RES, DP_LINE_LENGTH,
+                     DP_HOR_OFFSET, DP_VER_HEIGHT, DP_VER_OFFSET.
+
+                     If this value is modified, an application needs to call
+                     DP_SendPrinterParams() before the start of the next
+                     exposure in order for the change to take effect.
+
+    Additional Info:
+                     Appendix A: Configuration File in Digital Palette
+                     Parallel Port Specifications.
+
+                     Set Vertical Resolution command in Detailed Command
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_SendPrinterParams() function call.
+
+-----------------------------------------------------------------------------
+ DP_WAITFORBUFFER(dp)
+                                                               READ/WRITE
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Specifies the value of the WaitForBuffer flag.
+
+    Possible Values:
+                     TRUE  WaitForBuffer flag is set.
+                     FALSE WaitForBuffer flag is not set.
+
+          Data Type:
+                     char
+
+           Comments:
+                     The WaitForBuffer flag is set by DP_InitPrinter() to the
+                     value of the argument passed to it.
+
+                     The value of the WaitForBuffer flag may be modified by
+                     an application any time after calling DP_InitPrinter().
+
+    Additional Info:
+                     Buffer Warning Suppression, this document.
+
+-----------------------------------------------------------------------------
+ DP_WARNING(dp)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+
+                Use:
+                     Used to determine if the last Toolkit routine called
+                     returned a warning.
+
+    Possible Values:
+                     TRUE  if the current error classification indicates
+                           a warning, ie. BUFFERWARNING, EXPOSUREACTIVE, or
+                           REMOVEFILM.
+                     FALSE if any other error classification.
+
+          Data Type:
+                     int
+
+            Summary:
+
+    Additional Info:
+                     Errors and Warnings section in this document.
+
+-----------------------------------------------------------------------------
+ DP_X_ASPECT(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Aspect ratio film type.
+
+                Use:
+                     Specifies horizontal component of the Aspect Ratio for
+                     film type f.
+
+    Possible Values:
+                     Non-zero, Positive value.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_ASPECT_RATIO except that it only
+                     specifies the horizontal dimension.
+
+                     This value is correct for film type f after a successful
+                     return from DP_InitPrinter().
+
+                     An application should not modify this value.
+
+                     This value may be modified when an application calls
+                     DP_GetPrinterStatus() with the inquiry argument set
+                     to INQ_FILMS.
+
+    Additional Info:
+                     Inquire Aspect Ratio command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_GetPrinterStatus() function call.
+
+-----------------------------------------------------------------------------
+ DP_Y_ASPECT(dp, f)
+                                                               READ ONLY
+         Input args:
+                     DP_DATA     *dp
+                     int         f     Aspect ratio film type.
+
+                Use:
+                     Specifies vertical component of the Aspect Ratio for
+                     film type f.
+
+    Possible Values:
+                     Non-zero, Positive value.
+
+          Data Type:
+                     char
+
+           Comments:
+                     This macro is like DP_ASPECT_RATIO except that it only
+                     specifies the vertical dimension.
+
+                     This value is correct for film type f after a successful
+                     return from DP_InitPrinter().
+
+                     An application should not modify this value.
+
+                     This value may be modified when an application calls
+                     DP_GetPrinterStatus() with the inquiry argument set
+                     to INQ_FILMS.
+
+    Additional Info:
+                     Inquire Aspect Ratio command in Detailed Command 
+                     Descriptions of Digital Palette Parallel Port 
+                     Specifications.
+
+                     DP_InitPrinter() function call.
+
+                     DP_GetPrinterStatus() function call.
+
+==============================================================================
+
+MODIFIABLE OPERATING SYSTEM DEPENDENT UTILITIES
+
+ DP_GetConfigPath()
+
+     Summary:
+
+         char *DP_GetConfigPath(void)
+
+      DP_GetConfigPath() calls the C function getenv() to obtain the
+   environment variable DPALETTE from DOS.  If the environment variable is
+   unavailable, for instance if your application does not retain the PSP, you
+   should modify this routine to get the path/filename of the configuration
+   file from some other source.
+
+       Input:
+
+         None
+
+   Output:
+
+         Pointer to a string containing the Path/Filename of the Digital
+         Palette configuration file.
+
+ Modifies:
+
+         Nothing
+
+-----------------------------------------------------------------------------
+ DP_Sleep()
+
+     Summary:
+
+         void DP_Sleep(num)
+
+         DP_Sleep(num) will "sleep" for num seconds.  This routine calls the
+         routine WaitForTicks() which uses the DOS time of day interrupt to
+         count clock ticks until it is time to "wake up."  If this is not
+         appropriate for your application, for example running under multi-
+         tasking environment, you should modify this routine.
+
+       Input:
+
+         int num           Number of seconds to sleep.
+
+   Output:
+
+         None
+
+ Modifies:
+
+         Nothing
+
+-----------------------------------------------------------------------------
+ DP_FileOpen()
+
+     Summary:
+
+         void DP_FileOpen(DP_DATA *dp, char *FileName)
+
+         DP_FileOpen(dp, FileName) uses ANSI C function fopen() for read
+         access and stores the file pointer in structure dp as macro
+         DP_FILE_POINTER(dp) which is a union member of type FILE.
+
+         If you modify this routine to open the file with a low-level open
+         which uses int file handles, then store the handle in macro
+         DP_FILE_HANDLE(dp).
+
+         example:
+            DP_FILE_HANDLE(dp) = open(FileName, OS_SPECIFIC_READ_MODE) ; 
+
+       Input:
+
+         DP_DATA    *dp    Pointer to Digital Palette Toolkit data structure
+                           which is defined in the DPALETTE.H include file.
+
+         char *FileName    Name of the file to open.
+
+   Output:
+
+         Return zero if success, non-zero if error.
+
+ Modifies:
+
+         DP_FILE_POINTER()
+         DP_FILE_HANDLE()
+
+-----------------------------------------------------------------------------
+ DP_FileRead()
+
+     Summary:
+
+         void DP_FileRead(DP_DATA *dp, char *Buf, int numBytes)
+
+         DP_FileRead(dp, Buf, NumBytes) uses ANSI C fgetc() to read NumBytes
+         bytes into Buf from the file described by file pointer
+         DP_FILE_POINTER(dp).
+
+       Input:
+
+         DP_DATA    *dp    Pointer to Digital Palette Toolkit data structure
+                           which is defined in the DPALETTE.H include file.
+
+         char *buf         Pointer to buffer to receive read bytes.
+
+         int   numBytes    Number of bytes to read.
+
+   Output:
+
+         Return number of bytes actually read.
+
+ Modifies:
+
+         Nothing
+
+-----------------------------------------------------------------------------
+ DP_FileClose()
+
+     Summary:
+
+         void DP_FileClose(DP_DATA *dp)
+
+         DP_FileClose(dp) uses ANSI C fclose() to close the file described by
+         file pointer DP_FILE_POINTER(dp).
+
+       Input:
+
+         DP_DATA    *dp    Pointer to Digital Palette Toolkit data structure
+                           which is defined in the DPALETTE.H include file.
+
+   Output:
+
+         Return zero if file successfully closed, non-zero if error.
+
+ Modifies:
+
+         Nothing
+
+-----------------------------------------------------------------------------
+ DP_RLEncode()
+
+     Summary:
+
+         void DP_RLEncode(char *InBuf, char* OutBuf, NumBytes)
+
+         DP_RLEncode(dp) calls RLEncode() in file RLENCODE.C which is shipped
+         with this toolkit.  If you have another run-length encoder, plug it
+         in here.
+
+       Input:
+
+         char *InBuf       Pointer to buffer containing data to encode.
+
+         char *OutBuf      Pointer to buffer to recieve data to encode.
+
+         int   NumBytes    Number of bytes to encode.
+
+   Output:
+
+         Return number of bytes in encoded (OutBuf) buffer.
+
+ Modifies:
+
+         Nothing
+
+-----------------------------------------------------------------------------
+ DP_PathParse()
+
+     Summary:
+
+         void DP_PathParse(char *Fpath, char *Drive, char *Path,
+              char *Fname, char *Fext)
+
+         DP_PathParse(dp) calls PathParse() in file PATHPARS.C which is
+         shipped with this toolkit.  PathParse() emulates MicroSoft's
+         _splitpath() function.  If you want to replace the Toolkit's parser
+         your own, or with Microsoft's, plug it in here.
+
+       Input:
+
+         char *Fpath       Pointer to string containing your full file spec.
+
+         char *Drive       Pointer to string containing parsed Drive component
+                           of Fpath.
+
+         char *Path        Pointer to string containing parsed Path component
+                           of Fpath.
+
+         char *Fname       Pointer to string containing parsed Filename
+                           component of Fpath.
+
+         char *Fext        Pointer to string containing parsed Extension
+                           component of Fpath.
+
+   Output:
+
+         None
+
+ Modifies:
+
+         Contents of buffers indicated by Drive, Path, Fname and Fext.
+
+-----------------------------------------------------------------------------

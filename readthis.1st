@@ -1,0 +1,230 @@
+  DEC/CMS REPLACEMENT HISTORY, Element READTHIS.1ST 
+  *12   22-MAY-1991 15:16:05 BROGNA "Toolkit Version 3.0" 
+  *11    3-MAY-1991 12:09:23 BROGNA "" 
+  *10    1-APR-1991 18:04:12 BROGNA "Toolkit enhancments" 
+  *9    18-JAN-1991 04:56:50 BROGNA "MSC 6.0x" 
+  *8    29-NOV-1990 16:59:08 BROGNA "Version 2.21" 
+  *7    16-NOV-1990 12:10:38 BROGNA "Multi-Printer support" 
+  *6     7-NOV-1990 14:44:38 BROGNA "Added CFGdump and CFGmake to diskette inventory" 
+  *5    15-OCT-1990 10:16:13 BROGNA "" 
+  *4    10-OCT-1990 16:58:30 BROGNA "Version 2.1" 
+  *3     3-OCT-1990 15:15:12 BROGNA "Single data structure" 
+  *2    12-SEP-1990 11:03:46 BROGNA "ToolKit Upgrade" 
+  *1    13-APR-1990 09:44:47 BROGNA "ToolKit Distribution Disk Inventory File" 
+  DEC/CMS REPLACEMENT HISTORY, Element READTHIS.1ST 
+
+ POLAROID DIGITAL PALETTE SOFTWARE TOOLKIT INTERFACE DISKETTE (version 3.0)
+
+ Differences from Version 2.23:
+   Centronics and SCSI toolkit distibuted on the same diskette.
+   IBM PS/2 SCSI support.
+   Modifiable OS utilities.
+
+ Differences from Version 2.21:
+   MicroSoft C 6.0x compatible.
+
+ Differences from Version 2.2:
+      Multiple printers can be accessed via different Ports by creating a data
+   structure for each.  The state of each printer is stored within the data
+   structure.
+      The Toolkit uses two timeout limits when communicating with the Digital
+   Palette.  A long timeout limit is used when the film printer is exposing
+   and a short timeout limit is used otherwise.  DP_InitPrinter() sets these
+   Timeout limits to defaults (defined in dpalette.h); after a successfull
+   return from DP_InitPrinter() macros DP_SHORT_TIMEOUT and DP_LONG_TIMEOUT
+   may be used to change these default values.
+      Assembly code include files model.glo, prologue.glo and epilogue.glo
+   have been replaced by one include file MODDEF.INC to make it easier to
+   rebuild the Toolkit using a different memory model.  Macros have been added
+   to the make files TOOLKIT and SAMPLES which will allow the Toolkit to be
+   recompiled/assembled under any one of the following memory models:  LARGE,
+   MEDIUM, COMPACT, and SMALL.  No source code needs to be modified to change
+   memory models.  Note: TINY and HUGE memory models are not supported at this
+   time.
+
+==============================================================================
+
+---- Version 170 Firmware Bugs
+
+The following bugs in the Version 170 firmware have been discovered
+since the publication of the Version 1.4 Palette Parallel Port and SCSI
+Interface Specifications.  The Toolkit which is supplied accomodates these
+problems so you really don't have to be particularly concerned about
+them.  
+
+The Maximum Buffer Size which is reported in the Inquiry command is
+incorrect.  The value which is returned is, instead, the Total RAM
+size in the system, (eg, 128K or 640K).  The Palette Version 170
+firmware uses about 62Kbytes of the total RAM for its own purposes.
+The remainder is available to the buffer.  If the firmware version is
+170, the Toolkit will adjust the Maximum Buffer Size which is
+returned to the application.
+
+The Stop Print command will not bust through a full buffer.  If the
+Palette buffer is full, and the Stop Print command is issued, the
+command will not be executed until there's room in the buffer.
+Typically, this is not a problem.  If an image is being exposed on
+Pack film and the Terminate Exposure command has already been issued,
+then the Palette will be in Single Image mode and the buffer will
+show FULL until the exposure is complete.  This is the one case where
+the Stop Print command will not immediately stop the exposure.
+
+There are two activities which the Palette performs during which no
+host communication occurs: the auto-calibration and film advance.
+The auto-calibration takes about 1.3 seconds and the film advance will
+take 1.3 seconds for a 35mm back and 2.0 seconds for an AutoFilm back.
+These activities occur asynchronously with the host communication.  During
+this time, the Palette will not respond to any SCSI activity.  Low Level
+SCSI routines should have a timeout of no less than 3 seconds to accomodate
+this.
+
+In the Implementation Notes of Appendix B of the Version 1.4 specification,
+you will find any additional bug reports.
+
+=============================================================================
+
+----  Additional notes on the use of the Servo Mode
+
+One of the most critical aspects of writing a driver for the Digital
+Palette is the requirement that image data for a given primary color
+be available to the Palette in a timely fashion.  If the exposure of
+a primary color is begun and the flow of data pauses so that the
+Palette buffer runs dry, the exposure will stop until additional data
+is made available.  When this occurs, image defects may occur on
+film.  This defect will appear as a faint horizontal line in the
+image.  As a development/debugging aid, when the Palette buffer runs
+dry and there is a potential for image defects being produced, the
+blink rate of the LED on the Palette will change to a very slow rate.
+This slow rate will continue for the remainder of the exposure of the
+image.  Keep in mind that in order for the blink rate to change, the
+buffer need only run dry once.
+
+The time required to expose a single line of image data is dependant
+solely on the characteristics of the film.  The horizontal resolution
+has no impact on line exposure time.  The film tables which reside
+in the Palette firmware ( firmware version 170 ) will typically expose
+a line of image data in 40 to 50 milliseconds.  Polaroid, however, is
+currently developing film tables which can be downloaded from the host
+which will expose a line in 20 to 30 milliseconds.  These new film
+tables will significantly decrease the total exposure time without any
+impact on image quality.
+
+This places the burden on the host driver of supplying a line of image
+data to the Palette at an average rate of 20 to 30 msecs.  The driver
+design should consider 20 msecs as a target.  As an example; to
+expose a 2K wide by 1500 high image, 1500 lines must be sent to the
+Palette for each primary color.  The host must be able to deliver the
+pixel data for each primary within 20 x 1500 msec = 30 seconds.
+
+The Servo mode in the Palette was implemented to accomodate host
+systems which cannot deliver image data faster than the image is
+being exposed.  This situation is much more common when the Palette
+is connected via the Centronics port as opposed to the SCSI Port.  In
+full Servo mode, the Palette will delay the beginning of the exposure
+of a color until it's internal buffer is almost full.  During this
+time, it monitors the rate at which data is being transmitted from
+the host.  The rate of exposure is then modified to match the rate
+that the data is being transmitted.  With SCSI, the transmission rate
+is significantly greater than the rate at which the data is being
+'consumed' by the exposure.  Typically, the host will send many lines
+of image data in a single burst and then move on to other tasks.
+This has the potential of confusing the Servo mechanism.  If the host
+can supply image data, on average, at a rate greater than the
+exposure consumption rate, then Servo is not required.
+
+The default Servo mode in the Toolkit is Full Servo.  This is the
+appropriate mode if the host is rastering a line of image data and
+then sending the line to the Palette. In this case, the process is
+probably limited by the computation on the host.  As an example of
+what happens when the host does not supply data fast enough, you can
+modify the backg demo program to turn Servo off.  Watch the line
+begin sent and the line being exposed.  Initially, the transmission
+gets a slight head start but the exposure process will catch up.
+( This is true, at least, on a 16MHz 80386 or Mac IIcx).  When the
+line being transmitted and the line being exposed are the same, it
+means that the Palette buffer has run dry.  At this point, the Palette
+LED blink rate will change to a slower rate.
+
+If your application can render an image faster than the exposure or
+will be spooling the image to RAM or disk storage before beginning the
+exposure, then you'll be able to send the data to the Palette much faster
+than the Palette will be able to expose the data.  In this case, the
+preferred approach would be to turn Servo off and send the data in
+bursts to keep the Palette's internal buffer full.
+
+=============================================================================
+
+ What's on this disk:
+
+ READTHIS.1ST                         The file you are reading right now.
+ DPALETTE.DOC                         Disk based version of the printed
+                                      document shipped with the toolkit
+                                      diskette.
+
+ TOOLKIT                              Subdirectory containing Centronics
+                                      toolkit files.
+    TOOLKIT.MS                        Microsoft make file for building
+                                      centronics toolkit library.
+    DPALETTE.H TKHOST.H DPTKCENT.H    Include files for Centronics toolkit.
+    MODDEF.INC
+    DPINIT.C DPINQUIR.C DPSNDIMG.C    Source code files for toolkit.
+    DPSNDPRM.C DPTKUTIL.C DPCOMM.C
+    PATHPARS.C PRSEND.ASM RLENCODE.C
+    POLATIME.ASM
+    TKDP2000.LIB                      Pre-build library for Centronics
+                                      toolkit.
+    CFGDUMP.C CFGDUMP.EXE             Dumps the config file settings.
+    CFGMAKE.C CFGMAKE.EXE             Create a new config file with default
+                                      settings.
+    PCHAR1.EXE PCHAR2.EXE             Parallel port communications utilities
+    PCHARS.DOC                        and documentation.
+
+ TKSCSI                               Subdirectory containing Digital Palette
+                                      SCSI toolkit files:
+    SCTKREAD.ME                       Readme file for SCSI specific info.
+    SCTLKIT.MS                        Microsoft make file for building SCSI
+                                      toolkit libraries.
+    SCDPERRS.H SCLOWLVL.H TKDFPCMD.H  Include files for SCSI toolkit.
+    TKINQUIR.H TKMODSEL.H TKMODSEN.H
+    TKSCCMDS.H DPALETTE.H TKHOST.H
+    MODDEF.INC
+    SCDPINIT.C SCDPINQU.C SCDPSIMG.C  Source files for SCSI toolkit.
+    SCDPSPRM.C SCDPSCMD.C PATHPARS.C
+    RLENCODE.C DPTKUTIL.C SCDPRERR.C
+    POLATIME.ASM
+    SCDPFDOM.C                        Future Domain SCSI source.
+    SCDPMAC.C LSCMAIN.C               Macintosh SCSI source.
+    SCDPNCR.C                         NCR SCSI source.
+    SCDPPS2.C                         PS/2 SCSI source.
+    FUTURDOM/OEMSCSIL.OBJ             Future Domain memory model object files
+    FUTURDOM/OEMSCSIM.OBJ             for SCSI interface.
+    FUTURDOM/OEMSCSI.OBJ
+    TKSCSI.LIB                        Pre-built library for Future Domain.
+
+ TKSAMPLE                             Subdirectory containing sample Toolkit
+                                      programs and executables.
+    TKSAMPLE.DOC                      Readme files for toolkit samples.
+    SAMPLES.MS                        Microsoft make file for Centronics
+                                      toolkit sample programs.
+    SCSAMPLE.MS                       Microsoft make file for SCSI toolkit
+                                      sample programs.
+    DEMOSUP.H SLEEP.C DEMOSUP.C       Include file and support code for sample
+                                      programs.
+    APIC.C APIC.EXE                   Exposes one image of random pixels.
+    ASPECT.C ASPECT.EXE               Reports the aspect rations of films.
+    BACKG.C BACKG.EXE                 Exposes an image with a background sweep
+    BDPARM.C BDPARM.EXE               Sends bad data to Digital Palette and
+                                      reports errors.
+    DPABORT.C DPABORT.EXE             Aborts an exposure in progress.
+    MKERROR.C MKERROR.EXE             Leaves the Digital Palette in an error
+                                      state that the next program should
+                                      handle and report.
+    MOSAIC.C MOSAIC.EXE               Exposes mosaic images on one piece of
+                                      film.
+    NPICS.C NPICS.EXE                 Exposes multiple images of random pixels
+    TIMEIT.C TIMEIT.EXE               Reports rate of pixel delivery to the
+                                      Digital Palette.
+    TKFILM.C TKFILM.EXE               Reports on Digital Palette films.
+    TKSTAT.C TKSTAT.EXE               Report on current state of Digital
+                                      Palette and installed options.
+

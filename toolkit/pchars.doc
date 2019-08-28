@@ -1,0 +1,54 @@
+ DEC/CMS REPLACEMENT HISTORY, Element PCHARS.DOC
+ *2     3-MAY-1991 12:08:17 BROGNA ""
+ *1    13-APR-1990 09:42:36 BROGNA "DOCO FOR PCHAR1.EXE AND PCHAR2.EXE"
+ DEC/CMS REPLACEMENT HISTORY, Element PCHARS.DOC
+Pchar1.exe and Pchar2.exe usage document.
+
+ Copyright (C) 1988, 1989, 1990, 1991 Polaroid Corporation
+
+    Pchar1.exe and Pchar2.exe are used to download commands and data from
+    DOS to the Digital Palette.
+
+Usage (where N = port#)
+
+        With no arguments this utility displays the status of the port N in
+        hexidecimal.  (See port status description below.)
+
+        With arguments, PcharN displays the initial status of the port plus
+        the status of the port after each byte of data has been sent.
+
+PcharN  $  c  c  n  n  bytes...
+        |  |  |  |  |    |
+        |  |  |  |  |    data byte values (number of bytes = byte count)
+        |  |  |  |  MSB of byte count (in decimal)
+        |  |  |  LSB of byte count (in decimal)
+        |  |  Second byte of Digital Palette command
+        |  First byte of Digital Palette command
+        $ translates to Escape (hex 1b)
+
+    Example to abort an exposure in progress from DOS to a Digital Palette
+    connected to LPT2:
+
+Pchar2 $ A B 0 0
+
+initial status 90
+pchar pstat $ 90
+pchar pstat A 90
+pchar pstat B 90
+pchar pstat 0 90
+pchar pstat 0 90
+
+
+Printer Port Status description:
+
+ msb    1    1    1    1    1    1    1    1 lsb
+
+        |    |    |    |    |    |    |    |
+        |    |    |    |    |    |    |    TimeOut
+        |    |    |    |    |    |    Not Used
+        |    |    |    |    |    Not Used
+        |    |    |    |    I/O Error
+        |    |    |    Printer Selected
+        |    |    Out of Paper
+        |    Acknowledge
+        Printer Not Busy
